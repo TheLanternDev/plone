@@ -1,16 +1,18 @@
-# Płonę
+# Trzy pokoje (Płonę / Latarnia / Pomiędzy)
 
-Trzy pokoje, jedna obecność.
+Jedna obecność, trzy stany.
 
-- **Płonę** — kiedy coś gore. Pisz, wraca odpowiedź. → `/`
-- **Latarnia** — gdy nic dziś nie musisz. Jedno zdanie, oddech. → `/latarnia/`
-- **Pomiędzy** — list do siebie w przyszłość. Plik wraca w wybranym dniu. → `/pomiedzy/`
+- **Latarnia** — wejście. Jedno zdanie, oddech. → `/`
+- **Płonę** — gdy w środku za gorąco. Słowo w odpowiedź. → `/plone/`
+- **Pomiędzy** — list do siebie; plik `.pomiedzy-YYYY-MM-DD.html` (kropka na początku nazwy). → `/pomiedzy/`
+- Stary URL `/latarnia/` przekierowuje na `/`
 
 Live: [https://thelanterndev.github.io/plone/](https://thelanterndev.github.io/plone/)
 
 ## Lokalnie
-Otwórz `index.html` w przeglądarce, albo uruchom prosty serwer w katalogu:
 
 ```bash
 python3 -m http.server 8000
 ```
+
+Otwórz `http://localhost:8000/`.

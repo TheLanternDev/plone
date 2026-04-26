@@ -260,12 +260,13 @@
 <body>
 <div class="wrap" id="root"></div>
 <div id="seal-fx" aria-hidden="true"><div class="stamp"><span class="stamp-glyph">P</span></div></div>
-<a class="room left"  href="../"           aria-label="Płonę — kiedy coś gore">płonę</a>
-<a class="room right" href="../latarnia/"   aria-label="Latarnia — gdy nic dziś nie musisz">latarnia</a>
+<a class="room left"  href="../plone/"  aria-label="Płonę">płonę</a>
+<a class="room right" href="../"         aria-label="Latarnia">latarnia</a>
 
 <script>
 const SEALED_PAYLOAD = null;
 const PRISTINE_SOURCE = document.documentElement.outerHTML;
+const POM_KEY_PEPPER = 'pomiedzy:v2';
 
 function xorCipher(text, key) {
   let out = '';
@@ -274,6 +275,7 @@ function xorCipher(text, key) {
   }
   return out;
 }
+function xorKeyV2(iso) { return iso + '|' + POM_KEY_PEPPER; }
 function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
 function fromB64(s) { return decodeURIComponent(escape(atob(s))); }
 
@@ -295,8 +297,8 @@ function renderCreate() {
     </div>
     <button id="seal">Zaplombuj</button>
     <p class="note">
-      Nic nie wychodzi z tej strony. Plik powstaje u ciebie, zostaje u ciebie.<br>
-      Zapisz go tam, gdzie wróci do ciebie wtedy, kiedy trzeba.
+      Nic nie wychodzi z tej strony. Pobierzesz plik .html: treść w środku domyka się w wybranym dniu (nazwa zaczyna się kropką, żeby w Pobraniach mniej rzucał się w oczy).<br>
+      Pełnej blokady jak od banku płatności nie obiecuje nikt bez serwera — tu chodzi o skuteczną, ludzką pauzę, nie wojnę szyfrową.
     </p>
   `;
   const today = new Date();
@@ -317,15 +319,15 @@ async function seal() {
   fx.classList.add('on');
   await new Promise(r => setTimeout(r, 1100));
 
-  const cipher = toB64(xorCipher(text, when));
-  const payload = { c: cipher, d: when, sealed_at: new Date().toISOString().slice(0, 10) };
+  const cipher = toB64(xorCipher(text, xorKeyV2(when)));
+  const payload = { v: 2, c: cipher, d: when, sealed_at: new Date().toISOString().slice(0, 10) };
   const html = await currentSourceWithPayload(payload);
 
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `pomiedzy-${when}.html`;
+  a.download = '.pomiedzy-' + when + '.html';
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -337,7 +339,7 @@ async function seal() {
   const root = document.getElementById('root');
   root.innerHTML = `
     <h1>Zaplombowane</h1>
-    <p class="sub">Plik zapisał się u ciebie. Zachowaj go bezpiecznie.</p>
+    <p class="sub">To po twojej stronie, do tej daty tylko odliczanie — bez treści w jasnym tekście w pliku.</p>
     <div class="when">otworzy się ${fmtDate(when)}</div>
     <p class="note">
       Możesz wysłać go sobie mailem. Możesz schować na dysku.<br>
@@ -356,10 +358,10 @@ async function currentSourceWithPayload(payload) {
 
 function renderSealed(payload) {
   const root = document.getElementById('root');
-  const now = new Date(); now.setHours(0,0,0,0);
+  const today = new Date();
   const open = new Date(payload.d + 'T00:00:00');
-
-  if (now < open) {
+  const d0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (d0(today) < d0(open)) {
     root.innerHTML = `
       <div class="sealed">
         <div class="glow"></div>
@@ -372,8 +374,10 @@ function renderSealed(payload) {
   }
 
   let plain = '';
-  try { plain = xorCipher(fromB64(payload.c), payload.d); }
-  catch (e) { plain = '(nie udało się odczytać)'; }
+  try {
+    if (payload.v === 2 && payload.c) plain = xorCipher(fromB64(payload.c), xorKeyV2(payload.d));
+    else if (payload.c) plain = xorCipher(fromB64(payload.c), payload.d);
+  } catch (e) { plain = '(nie udało się odczytać)'; }
 
   root.innerHTML = `
     <div class="sealed">

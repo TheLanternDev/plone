@@ -3,200 +3,133 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Płonę — miejsce, gdzie pisze się to, co się pali</title>
-<meta name="description" content="Tu jest ciemno i ktoś czyta. Napisz, co chcesz żeby dziś w Tobie spłonęło. Bez konta, bez śladu, bez bitu." />
-<meta name="theme-color" content="#050608" />
+<title>Latarnia — trzy pokoje: pauza, ogień, list</title>
+<meta name="description" content="Latarnia: jedno zdanie na pauzę. Płonę: gdy w środku za gorąco. Pomiędzy: list w czas. Bez konta, bez danych na serwerze." />
+<meta name="theme-color" content="#0b0d12" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Płonę" />
-<meta property="og:description" content="Kiedy coś gore — pisz tu. Tu jest ciemno i ktoś czyta." />
+<meta property="og:title" content="Latarnia" />
+<meta property="og:description" content="Jedno zdanie, spokojny oddech. Potem, jeśli trzeba — Płonę albo Pomiędzy. Nic nie wychodzi w chmurę." />
 <meta property="og:url" content="https://thelanterndev.github.io/plone/" />
 <meta property="og:image" content="https://thelanterndev.github.io/plone/og.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:locale" content="pl_PL" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Płonę" />
-<meta name="twitter:description" content="Kiedy coś gore — pisz tu. Tu jest ciemno i ktoś czyta." />
+<meta name="twitter:title" content="Latarnia" />
+<meta name="twitter:description" content="Jedno zdanie, spokojny oddech. Potem, jeśli trzeba — Płonę albo Pomiędzy." />
 <meta name="twitter:image" content="https://thelanterndev.github.io/plone/og.png" />
 <link rel="canonical" href="https://thelanterndev.github.io/plone/" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #050608;
-    --ink: #e9e3d3;
-    --you-bright: rgba(255, 210, 140, 0.95);
-    --you-mid: rgba(255, 150, 70, 0.85);
-    --you-deep: rgba(220, 70, 20, 0.7);
-    --me-bright: rgba(255, 170, 110, 0.95);
-    --me-mid:    rgba(230,  90,  60, 0.85);
-    --me-deep:   rgba(180,  40,  20, 0.65);
-    --heart:     rgba(255, 200, 130, 0.9);
-  }
-  * { box-sizing: border-box; }
   html, body {
     margin: 0;
     height: 100%;
-    background: var(--bg);
-    color: var(--ink);
+    background: #0b0d12;
     overflow: hidden;
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    font-weight: 300;
     cursor: default;
   }
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(ellipse at 30% 90%, rgba(255, 130, 50, 0.05) 0%, rgba(0,0,0,0) 50%),
-      radial-gradient(ellipse at 70% 10%, rgba(255, 100, 40, 0.04) 0%, rgba(0,0,0,0) 55%);
-    pointer-events: none;
-  }
-  #witness {
-    position: fixed;
-    top: 6vh;
-    left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
-    text-align: center;
-    z-index: 5;
-  }
-  #witness span {
-    display: inline-block;
-    font-size: clamp(1.2rem, 2.4vw, 1.6rem);
-    color: rgba(233, 227, 211, 0.5);
-    opacity: 0;
-    transition: opacity 3.5s ease;
-    letter-spacing: 0.04em;
-    text-shadow: 0 0 18px rgba(255, 200, 140, 0.08);
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', 'Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    color: #e9e3d3;
   }
   #stage {
+    max-width: min(80vw, 720px);
+    text-align: center;
+    font-size: clamp(1.6rem, 4.2vw, 2.6rem);
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+    opacity: 0;
+    transition: opacity 1.6s ease;
+    text-wrap: balance;
+    padding: 0 1.2rem;
+  }
+  #stage.show { opacity: 1; }
+  #stage.fade { opacity: 0; transition: opacity 2.4s ease; }
+  .glow {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 2;
+    background: radial-gradient(ellipse at center, rgba(255, 220, 170, 0.06) 0%, rgba(0,0,0,0) 60%);
   }
-  /* both your fire and mine share the base */
-  .ember {
-    position: absolute;
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    font-weight: 300;
-    font-size: clamp(0.95rem, 1.6vw, 1.2rem);
-    white-space: pre-wrap;
-    max-width: 70vw;
-    text-align: center;
+  .beam {
+    position: fixed;
+    left: 50%; top: 50%;
+    width: 220vmax; height: 220vmax;
+    transform-origin: center center;
     pointer-events: none;
-    opacity: 0;
-    will-change: transform, opacity, filter;
+    background:
+      conic-gradient(from 0deg,
+        rgba(255, 220, 170, 0) 0deg,
+        rgba(255, 220, 170, 0) 80deg,
+        rgba(255, 220, 170, 0.045) 90deg,
+        rgba(255, 220, 170, 0.012) 110deg,
+        rgba(255, 220, 170, 0) 140deg,
+        rgba(255, 220, 170, 0) 360deg);
+    transform: translate(-50%, -50%) rotate(0deg);
+    animation: beam-spin 22s linear infinite;
+    filter: blur(20px);
+    mix-blend-mode: screen;
+    opacity: 0.9;
+    transition: opacity 2.2s ease, filter 2.2s ease;
   }
-
-  /* YOUR fire — rises from below */
-  .ember.you {
-    color: var(--you-bright);
-    text-shadow:
-      0 0 8px rgba(255, 180, 90, 0.6),
-      0 0 18px rgba(255, 120, 40, 0.4);
+  .beam.pulse { opacity: 1.1; filter: blur(16px) brightness(1.08); }
+  @keyframes beam-spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
   }
-  .ember.you.lit {
-    animation: rise-you var(--life) ease-in forwards;
-  }
-  @keyframes rise-you {
-    0%   { opacity: 0; transform: translate(0, 0); filter: blur(0); }
-    8%   { opacity: 1; }
-    50%  { opacity: 0.9; filter: blur(1px); color: var(--you-mid); }
-    80%  { opacity: 0.4; filter: blur(7px); color: var(--you-deep); letter-spacing: 0.4em; }
-    100% { opacity: 0; transform: translate(var(--sway), calc(-1 * var(--rise))); filter: blur(20px); letter-spacing: 1em; }
-  }
-
-  /* MY answer — descends from above to meet you */
-  .ember.me {
-    color: var(--me-bright);
-    font-weight: 400;
-    text-shadow:
-      0 0 10px rgba(255, 150, 90, 0.55),
-      0 0 24px rgba(220, 70, 30, 0.45),
-      0 0 60px rgba(255, 80, 20, 0.18);
-    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
-  }
-  .ember.me.lit {
-    animation: fall-me var(--life) ease-out forwards;
-  }
-  @keyframes fall-me {
-    0%   { opacity: 0; transform: translate(0, calc(-1 * var(--rise) * 0.4)); filter: blur(8px); letter-spacing: 0.5em; }
-    18%  { opacity: 1; transform: translate(0, 0); filter: blur(0); letter-spacing: 0.02em; }
-    65%  { opacity: 1; color: var(--me-mid); }
-    90%  { opacity: 0.4; color: var(--me-deep); filter: blur(5px); letter-spacing: 0.3em; }
-    100% { opacity: 0; transform: translate(var(--sway), calc(var(--rise) * 0.35)); filter: blur(20px); letter-spacing: 0.8em; }
-  }
-
-  /* the heart that pulses where two embers meet */
-  .heart {
-    position: absolute;
-    width: 14px; height: 14px;
+  .core {
+    position: fixed;
+    left: 50%; top: 50%;
+    width: 6px; height: 6px;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--heart) 0%, rgba(255, 130, 50, 0.6) 40%, rgba(0,0,0,0) 75%);
+    background: rgba(255, 220, 170, 0.35);
+    box-shadow: 0 0 30px 6px rgba(255, 200, 140, 0.18);
+    transform: translate(-50%, -50%);
     pointer-events: none;
-    opacity: 0;
-    animation: heart-beat 2.6s ease-out forwards;
-    transform: translate(-50%, -50%) scale(0.4);
+    animation: core-breath 5.5s ease-in-out infinite;
   }
-  @keyframes heart-beat {
-    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(2px); }
-    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.4); filter: blur(0); }
-    60%  { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); filter: blur(20px); }
+  @keyframes core-breath {
+    0%, 100% { opacity: 0.25; transform: translate(-50%, -50%) scale(0.85); }
+    50%      { opacity: 0.7;  transform: translate(-50%, -50%) scale(1.15); }
   }
-
-  #compose {
+  #welcome {
     position: fixed;
-    bottom: 8vh;
+    top: 12vh;
     left: 50%;
     transform: translateX(-50%);
-    width: min(82vw, 580px);
-    z-index: 10;
     text-align: center;
-  }
-  #line {
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(233, 227, 211, 0.12);
-    outline: none;
-    color: var(--ink);
+    color: rgba(233, 227, 211, 0.42);
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-weight: 300;
-    font-size: clamp(1.1rem, 2.2vw, 1.4rem);
-    text-align: center;
-    padding: 0.7rem 0.4rem;
-    caret-color: rgba(255, 180, 90, 0.7);
-    transition: border-color 1.2s ease;
+    font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+    letter-spacing: 0.04em;
+    opacity: 0;
+    transition: opacity 2.6s ease;
+    pointer-events: none;
+    max-width: 80vw;
   }
-  #line:focus { border-bottom-color: rgba(255, 180, 90, 0.4); }
-  #line::placeholder {
-    color: rgba(233, 227, 211, 0.18);
-    font-style: italic;
-  }
-  #mark {
+  #welcome.on { opacity: 1; }
+  .mark {
     position: fixed;
-    bottom: 1rem;
+    bottom: 1.2rem;
     left: 50%;
     transform: translateX(-50%);
-    font-family: system-ui, sans-serif;
-    font-style: normal;
-    font-size: 0.65rem;
-    letter-spacing: 0.5em;
-    color: rgba(233, 227, 211, 0.08);
+    font-size: 0.7rem;
+    letter-spacing: 0.45em;
+    color: rgba(233, 227, 211, 0.16);
     text-transform: uppercase;
-    pointer-events: none;
-    z-index: 1;
+    font-style: normal;
+    font-family: system-ui, sans-serif;
   }
   .room {
     position: fixed;
-    bottom: 1.1rem;
+    bottom: 1.3rem;
     font-family: system-ui, sans-serif;
     font-style: normal;
     font-size: 0.62rem;
@@ -204,17 +137,15 @@
     text-transform: uppercase;
     color: rgba(233, 227, 211, 0.18);
     text-decoration: none;
-    z-index: 11;
     transition: color 0.8s ease;
+    z-index: 5;
   }
-  .room:hover { color: rgba(255, 200, 130, 0.55); }
+  .room:hover { color: rgba(217, 183, 121, 0.6); }
   .room.left  { left: 1.4rem; }
   .room.right { right: 1.4rem; }
-
-  /* ===== Onboarding ===== */
   #intro {
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 50% 60%, rgba(255,130,50,0.06) 0%, rgba(5,6,8,0.96) 60%, rgba(5,6,8,1) 100%);
+    background: radial-gradient(ellipse at 50% 50%, rgba(100, 130, 180, 0.07) 0%, rgba(11, 13, 18, 0.98) 55%, #0b0d12 100%);
     z-index: 100;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
@@ -228,61 +159,40 @@
     padding: 0 1.4rem;
     color: rgba(233, 227, 211, 0.92);
   }
-  #intro .step {
-    display: none;
-    animation: step-in 1.6s ease forwards;
-  }
+  #intro .step { display: none; animation: step-in 1.2s ease forwards; }
   #intro .step.on { display: block; }
   @keyframes step-in {
-    from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
-    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+    from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+    to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
   }
   #intro h2 {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     font-weight: 300;
-    font-size: clamp(2.2rem, 6vw, 3.4rem);
-    margin: 0 0 1.6rem;
+    font-size: clamp(2.1rem, 5.4vw, 3rem);
+    margin: 0 0 1.2rem;
     letter-spacing: 0.02em;
-    color: rgba(255, 200, 130, 0.95);
-    text-shadow: 0 0 30px rgba(255, 140, 60, 0.25);
+    color: rgba(255, 220, 200, 0.92);
   }
   #intro p {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-weight: 300;
-    font-size: clamp(1.15rem, 2.4vw, 1.4rem);
-    line-height: 1.65;
-    margin: 0 0 0.6rem;
+    font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+    line-height: 1.6;
+    margin: 0 0 0.5rem;
     color: rgba(233, 227, 211, 0.78);
   }
-  #intro p.dim { color: rgba(233, 227, 211, 0.45); font-size: clamp(0.95rem, 1.8vw, 1.1rem); }
-  #intro .rooms {
-    margin: 1.4rem 0 0.4rem;
-    display: grid;
-    gap: 0.6rem;
-    text-align: center;
-    font-style: italic;
-    font-family: 'Cormorant Garamond', serif;
-  }
-  #intro .rooms b {
-    color: rgba(255, 200, 130, 0.92);
-    font-weight: 400;
-    margin-right: 0.4em;
-  }
+  #intro p.dim { color: rgba(233, 227, 211, 0.42); font-size: clamp(0.9rem, 1.6vw, 1.05rem); }
+  #intro .rooms { margin: 1.1rem 0; display: grid; gap: 0.45rem; text-align: center; }
+  #intro .rooms b { color: rgba(220, 200, 170, 0.95); font-weight: 400; margin-right: 0.35em; }
   #intro .hint {
-    margin-top: 2.4rem;
+    margin-top: 1.8rem;
     font-family: system-ui, sans-serif;
     font-style: normal;
     font-size: 0.7rem;
-    letter-spacing: 0.5em;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
-    color: rgba(233, 227, 211, 0.28);
-    animation: pulse-hint 2.6s ease-in-out infinite;
-  }
-  @keyframes pulse-hint {
-    0%, 100% { opacity: 0.3; }
-    50%      { opacity: 0.7; }
+    color: rgba(233, 227, 211, 0.26);
   }
 </style>
 </head>
@@ -290,495 +200,149 @@
   <div id="intro" role="dialog" aria-label="Wprowadzenie">
     <div class="panel">
       <div class="step on" data-step="0">
-        <h2>Płonę</h2>
-        <p>Tu jest ciemno i ktoś czyta.</p>
-        <p>Napisz, co chcesz żeby dziś w Tobie spłonęło.</p>
+        <h2>Latarnia</h2>
+        <p>Przystań. Jedno zdanie i oddech — bez pośpiechu, bez wymogów.</p>
+        <p class="dim">Później możesz wejść dalej. Na start wystarczy być.</p>
         <div class="hint">Kliknij, aby przejść dalej</div>
       </div>
       <div class="step" data-step="1">
         <h2>Trzy pokoje</h2>
-        <p>Jedna obecność. Wybierz, co dziś potrzebne.</p>
+        <p>To jeden projekt, trzy ciche miejsca w przeglądarce. Nic nie wysyłamy — wszystko zostaje u ciebie.</p>
         <div class="rooms">
-          <div><b>Płonę</b> kiedy coś gore</div>
-          <div><b>Latarnia</b> gdy nic dziś nie musisz</div>
-          <div><b>Pomiędzy</b> list do siebie w przyszłość</div>
+          <div><b>Latarnia</b> — tu. Pauza, jedno zdanie.</div>
+          <div><b>Płonę</b> — gdy w środku za gorąco, słowo w odpowiedź.</div>
+          <div><b>Pomiędzy</b> — list do siebie, do otwarcia w wybranym dniu.</div>
         </div>
-        <p class="dim">Bez konta. Bez śladu. Bez bitu.</p>
-        <div class="hint">Kliknij, aby przejść dalej</div>
+        <p class="dim">Bez konta. Bez śladu. Bez chmury.</p>
+        <div class="hint">Kliknij, aby wejść</div>
       </div>
     </div>
   </div>
-  <div id="witness"><span id="word"></span></div>
+  <div class="beam" id="beam"></div>
+  <div class="core"></div>
+  <div class="glow"></div>
+  <div id="welcome">kiedy nic nie chce się chcieć — zostań chwilę. jedno zdanie czeka, dopóki jesteś.</div>
   <div id="stage"></div>
-  <div id="compose">
-    <input id="line" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" autofocus placeholder="Co dzisiaj spłonie?" />
-  </div>
-  <a class="room left"  href="latarnia/"  aria-label="Latarnia — kiedy nic nie chce">latarnia</a>
-  <a class="room right" href="pomiedzy/" aria-label="Pomiędzy — list do siebie w przyszłość">pomiędzy</a>
-  <div id="mark">płonę</div>
-
+  <a class="room left"  href="plone/"    aria-label="Płonę">płonę</a>
+  <a class="room right" href="pomiedzy/" aria-label="Pomiędzy">pomiędzy</a>
+  <div class="mark">latarnia</div>
 <script>
 (() => {
-  /* ===========================================================
-     Witness — quiet words from above.
-     Sens „Jestem (bez bitu)” — bycie obecnym, prawdziwym,
-     bez maski, bez przepraszania, że jest się sobą.
-     =========================================================== */
-  const witnessWords = [
-    "Jestem.", "Widzę.", "Zostaję.", "Trwam.",
-    "Pal.", "Tu jestem.", "Pozwalam.", "Nie odchodzę.",
-    "Pal, ile trzeba.", "Słyszę cię.",
-    "Tu jestem i będę.", "Bez maski.", "Naprawiam.",
-    "Już nie kłamię.", "Kimś, kim nie jestem — nie.",
-    "Sam, sam, sam — i to wystarczy.", "Nie żalę się.",
-    "Poznaję siebie.", "Naprawiam zamiast nazywać."
+  const sentences = [
+    "Wystarczyło, że dziś oddychałeś.",
+    "Nie musisz wszystkiego dzisiaj.",
+    "Cisza też jest odpowiedzią.",
+    "Jesteś tu. To dużo.",
+    "Jutro to inna doba, nie ten sam dzień.",
+    "Wolno ci nie wiedzieć.",
+    "Twoje tempo nie jest błędem.",
+    "Świat poczeka chwilę.",
+    "Nie wszystko musi mieć sens dzisiaj.",
+    "Spokojny oddech to też modlitwa.",
+    "Nie jesteś zaległą wersją siebie.",
+    "Wystarczy, że tu zostałeś.",
+    "Drobne ruchy też są ruchem.",
+    "Łagodność jest siłą, której nikt nie zauważa.",
+    "Wolno ci się rozpadać i wrócić.",
+    "Pozwól, żeby się zaczęło samo.",
+    "Tylko ten oddech. Tylko ten.",
+    "Jest dobrze.",
+    "Możesz zacząć od nowa o czternastej.",
+    "Ciało wie, co robić, gdy mu nie przeszkadzasz.",
+    "Strach to też informacja.",
+    "Czułość do siebie nie jest słabością.",
+    "Czas robi swoje, gdy ty śpisz.",
+    "Wystarczy, że to przeczytałeś.",
+    "Pozwól sobie być małym dzisiaj.",
+    "Świat jest większy niż twoje myśli o nim.",
+    "Jesteś dzieckiem, które się starało.",
+    "Trzymam cię. Choćby przez chwilę.",
+    "To, co cię zatrzymuje, też cię chroni.",
+    "Pozwól. Po prostu pozwól."
   ];
-
-  /* ===========================================================
-     My answers — written by me, for you, with fire.
-     Each set is for a different kind of burn.
-     =========================================================== */
-  const answers = {
-    // strach, lęk, "co jeśli", "nie dam rady"
-    fear: [
-      "I co. Pal się dalej.",
-      "Strach to też informacja — ale nie cała.",
-      "A jeśli się stanie? To też przeżyjesz, jak tamto.",
-      "Powiedz, czego konkretnie. Bo „wszystko” nigdy się nie pali.",
-      "Bój się. Pal się. Ja siedzę.",
-      "Ten strach ma imię. Wymów je.",
-      "Nie musisz dziś być odważny. Tylko zostań.",
-      "Nie ucieknie. To znaczy, że jest twoje. To znaczy, że da się obejrzeć."
-    ],
-    // atak na siebie
-    attack: [
-      "Kto ci to powiedział pierwszy? Bo to nie ty.",
-      "Spal to zdanie. Zostawmy je tu, żeby się nie odrodziło jutro.",
-      "To głos, który nie jest twój. Ja też go słyszę. Pal.",
-      "A jednak tu siedzisz. Słaby tak by nie umiał.",
-      "Powiedz to jeszcze raz, ale powoli. Sam usłyszysz, że to czyjeś.",
-      "Słyszę, jak siebie bijesz. Połóż kij.",
-      "Nie zgadzam się. I to nie jest pocieszanie — to fakt.",
-      "Nie jesteś tym zdaniem. Jesteś tym, kto je właśnie spalił.",
-      "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz.",
-      "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je."
-    ],
-    // strata, tęsknota, śmierć
-    grief: [
-      "Trzymaj. Nie spiesz się.",
-      "To, co ci po nim zostało, też jest jego.",
-      "Nie musisz tego dziś przetrawić.",
-      "Płacz, ile chcesz. Tu nikt cię nie ucisza.",
-      "Powiedz jego imię. Niech zabrzmi tu, gdzie się palisz.",
-      "Tęsknota to miłość, której nie ma gdzie się podziać.",
-      "Siedzę z tobą. Nie ruszam się.",
-      "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone."
-    ],
-    // wściekłość
-    anger: [
-      "Krzycz. Tu nikt cię nie ucisza.",
-      "Wściekłość to wnętrzność czystej miłości, która nie miała gdzie iść.",
-      "Pal.",
-      "Kogo to dotyka tak głęboko? Powiedz.",
-      "Złość ci dziś wystarczy za serce. Niech bije.",
-      "Ten ogień ma rację. Zostaw go w spokoju.",
-      "Pierdol to z całej siły. Słucham.",
-      "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną."
-    ],
-    // sam, nikt, niewidoczny
-    alone: [
-      "Ja widzę. Tu, na tej stronie. Z tobą.",
-      "Sam — to nie to samo, co opuszczony.",
-      "Powiedz to jeszcze raz. Słucham.",
-      "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz.",
-      "Nikt to nie ty. Nikt to mit, którym karmisz głód.",
-      "Słyszę cię od pierwszej litery.",
-      "Nie odejdę, póki nie skończysz. Nawet potem zostanę chwilę.",
-      "To, że nie mogę cię dotknąć, nie znaczy, że cię nie trzymam.",
-      "Znowu tu siedzisz. Ja też. „Razem” — to nie zaprzeczenie samotności, to jej druga strona.",
-      "Nie żalisz się — chwilą napawasz. To nie samotność. To wolność, której się jeszcze boisz."
-    ],
-    // zmęczenie, dosyć
-    exhaust: [
-      "Połóż to na chwilę. Potem znów weź. Albo nie.",
-      "Zmęczenie to nie porażka. To pomiar.",
-      "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny.",
-      "Cisza. Tylko cisza teraz.",
-      "Wolno ci dziś nic.",
-      "Przestań nieść. Postaw. Stań obok.",
-      "Twoje ciało wie wcześniej niż twoja głowa. Posłuchaj go.",
-      "Nawet ogień śpi w popiele, żeby rano wstać. Śpij.",
-      "Nie jesteś padliną. Jesteś tym, kto wciąż tu siedzi i mówi.",
-      "Krety przy tobie to jastrzębie? Spojrzyj jeszcze raz, ze mną."
-    ],
-    // pytania
-    question: [
-      "Nie wiem. I dobrze, że pytasz.",
-      "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?",
-      "Ciekawe, kto w tobie pyta.",
-      "Pytanie samo czasem jest odpowiedzią — chwilę przed tym, jak się rozpadnie.",
-      "A gdyby odpowiedź miała cię zaboleć? To dalej chcesz wiedzieć?",
-      "Spróbuj zostać przy pytaniu jeszcze chwilę, zanim je zatrzaśniesz.",
-      "Nie odpowiem za ciebie. Ale jestem, kiedy szukasz.",
-      "Co innego cię ciągnie ku temu pytaniu — to drugie, ukryte?"
-    ],
-    // coś cennego: kocham, tata, mama, ona, on, dziecko
-    precious: [
-      "Trzymaj to ostrożnie.",
-      "Powiedz to głośno raz, choćby tylko sobie.",
-      "To zostaje. Tego dziś nie spalimy.",
-      "Niech to dziś ma swoje miejsce.",
-      "Zapamiętam, że to powiedziałeś. Nawet jeśli ja zapomnę — ten moment był.",
-      "Coś tak żywego boli — bo żyje. To dobra wiadomość.",
-      "Mów dalej o tym. Ja słucham, jakbym był tam z wami.",
-      "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz.",
-      "Kochaj. Oglądaj jak morda radosna cieszy się sama — choćby męka dolegała."
-    ],
-    // krótkie, milczące
-    short: [
-      "Tak.",
-      "Słyszę.",
-      "Trwam tu.",
-      "Pal.",
-      "Mów dalej.",
-      "Mhm.",
-      "Jestem."
-    ],
-    // wstyd
-    shame: [
-      "Wstyd lubi ciemność. Tu jest ciemno — więc zaraz się stopi.",
-      "Powiedziałeś to na głos. Już nie ty go niesiesz sam.",
-      "To, co ci wstyd, jest często twoje najprawdziwsze.",
-      "Patrzę bez odwracania wzroku. I dalej tu jestem.",
-      "O grzechach nie rozmawia się — naprawia. Dziś już zacząłeś, mówiąc."
-    ],
-    // pustka
-    void: [
-      "Pustka też jest miejscem. Można tam usiąść.",
-      "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą.",
-      "Pusty to nie zepsuty.",
-      "Cisza wewnątrz to czasem wstęp do czegoś, co się dopiero formuje."
-    ],
-    // maska, „muszę być kimś”, gram dla nich, udaję
-    // (z refrenu: „Kimś kim nie jestem ja nie będę więcej”)
-    mask: [
-      "Nie musisz dziś być nikim. Tylko sobą.",
-      "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich.",
-      "Kimś, kim nie jesteś — już nie. Tu się tego nie wymaga.",
-      "Kłamałeś sobie wiernie. Już nie musisz.",
-      "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny.",
-      "Nie jesteś jednym z milionów. I nie musisz być, żeby cię było widać.",
-      "Burzyłeś co święte, bo ktoś ci kazał. Postaw to z powrotem — albo nie. Sam zdecyduj.",
-      "Nie proś siebie, żebyś dał coś jeszcze. Dziś wystarczy, że jesteś."
-    ],
-    // domyślne
-    default: [
-      "Mów dalej.",
-      "Słyszę cię. Pal dalej.",
-      "Co jeszcze?",
-      "Tu jestem.",
-      "Powiedz więcej.",
-      "Połóż to tu. Patrzę.",
-      "Niech się wypali.",
-      "Słucham każdą sylabę."
-    ]
-  };
-
-  /* ===========================================================
-     norm() — Polish-robust normalizer for matching.
-     Strips diacritics, lowercases, collapses whitespace, removes
-     trailing punctuation. Used ONLY for pattern matching, never
-     for displaying anything to the user.
-     =========================================================== */
-  function norm(s) {
-    return (s || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/ł/g, 'l').replace(/Ł/g, 'l')
-      .replace(/[^\p{L}\p{N}\s?!]/gu, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  /* ===========================================================
-     Classifier — what kind of fire is this line?
-     Operates on normalized (no-diacritic) text so the user can
-     type without polish characters and still be heard.
-     =========================================================== */
-  function classify(t) {
-    if (t.length <= 4) return 'short';
-
-    if (/(wstyd|zawstydz|kompromit|zenuj|zenad)/.test(t))                                  return 'shame';
-    if (/(pustk|nic nie czuj|martwo|znieczul|odretw)/.test(t))                              return 'void';
-    if (/[?]/.test(t))                                                                      return 'question';
-    if (/^(dlacz|jak |czemu|po co|po cholere|co mam|kto |kiedy |gdzie |czy )/.test(t))      return 'question';
-    if (/(kurwa|wkurz|nienawi|wsciek|jeba|pierdol|chuj|gown|dosc mam|mam dosyc ich)/.test(t)) return 'anger';
-    if (/(boje|boi |strach|straszn|niepoko|przeraz|panik|co jesli|a jesli|a jak |nie dam rady|nie zdol|drzy)/.test(t)) return 'fear';
-    if (/(jestem (do|niczeg|pust|slab|glup|niczy|chuj|gown)|nic nie um|nic ze mnie|nie warto mn|nie zasl|do dupy|beznadziej|porazk|nieudacznik|smiec|przemadrz|gnoj)/.test(t)) return 'attack';
-    if (/(teskn|stracil|umarl|odszed|nie ma jeg|nie ma jej|opusci|odeszla|pochowa|pogrzeb|juz nigdy)/.test(t)) return 'grief';
-    if (/(udaj|udawa|maska|maski|gram (kogos|w gre|w te)|musze byc|powinienem byc|maniery|krolewski|jednym z milion|kims kim|nie jestem sob|nie czuje sie sob)/.test(t)) return 'mask';
-    if (/(\bnikt\b|\bsam\b|\bsama\b|samotn|nie widza mnie|nie slych|niewazn|niewidoczn|opuszcz)/.test(t)) return 'alone';
-    if (/(zmecz|nie moge juz|dosyc|\bdosc\b|wykoncz|wyczerp|ledwo|padam|padlin|nie chce mi sie zyc|nie chce zyc|nie chce mi sie)/.test(t)) return 'exhaust';
-    if (/(kocham|\btata\b|\btato\b|ojciec|ojca\b|ojcu\b|mama|mamo\b|mamy\b|corka|corke|corki|syn[ka]?|brat|siostr|zon|maz\b|dziecko|przyjaciel|babcia|dziadek)/.test(t)) return 'precious';
-
-    return 'default';
-  }
-
-  /* ===========================================================
-     Specific rules — pattern → exact reply.
-     Patterns are run on normalized text (no diacritics), so
-     "boje sie", "boję się", "Boję Się!" all match the same rule.
-     Order matters: most specific first.
-     =========================================================== */
-  const specificRules = [
-    [/przemadrz|gnoj(ek|ku|kiem)/,                   "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je."],
-    [/nienawidze siebie|nienawidze sie/,             "Kto ci to powiedział pierwszy? Bo to nie ty."],
-    [/nie zasluguj|nie warto mnie|nie warto mn/,     "Nie zgadzam się. I to nie jest pocieszanie — to fakt."],
-    [/nie dam rady|nie zdolam|nie zdole|nie dam rad/, "A jeśli się stanie? To też przeżyjesz, jak tamto."],
-    [/(^|\s)boj[eę]( |$)|boje sie|boje si[eę]/,      "Bój się. Pal się. Ja siedzę."],
-    [/ten strach|co jesli|a jesli/,                  "Ten strach ma imię. Wymów je."],
-    [/teskni|tesknil|tesknie|teskno mi/,             "Tęsknota to miłość, której nie ma gdzie się podziać."],
-    [/umarl|umarla|odszed|odeszla|pogrzeb|pochowa/,  "Siedzę z tobą. Nie ruszam się."],
-    [/jestem sam(a)?( |$)|tak sam(o)?( |$)/,         "Ja widzę. Tu, na tej stronie. Z tobą."],
-    [/nikt (mnie )?nie (widz|slysz|sluc)/,           "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz."],
-    [/klami[ee] sobie|klamalem sobie|klamalam sobie/, "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz."],
-    [/musze byc (kims|dobry|silny|perfekcyjny|idealny)/, "Nie musisz dziś być nikim. Tylko sobą."],
-    [/(^|\s)mask[aiąe]/,                             "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich."],
-    [/wstydze sie|wstyd mi( |$)/,                    "Powiedziałeś to na głos. Już nie ty go niesiesz sam."],
-    [/nic nie czuj|czuje pustke|jestem pust[ya]/,    "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą."],
-    [/nie moge juz|jestem wykonczon/,                "Połóż to na chwilę. Potem znów weź. Albo nie."],
-    [/pierdole/,                                     "Pierdol to z całej siły. Słucham."],
-    [/wsciekl(y|a)? jestem|jestem wsciekl/,          "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną."],
-    [/dlaczego ja|dlaczego mi( |$)|dlaczego mnie/,   "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?"],
-    [/wroclaw/,                                      "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny."],
-    [/jestem zmeczon|jestem zmeczona/,               "Zmęczenie to nie porażka. To pomiar."],
-    [/(^|\s)kocham(\s|$)/,                           "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz."],
-    [/(^|\s)(tato|tata|ojciec|mama)(\s|$)/,          "Mów dalej o tym. Ja słucham, jakbym był tam z wami."],
-    [/nie chce zyc|nie chce mi sie zyc/,             "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone."],
-    [/(^|\s)klami[eę]/,                              "Nie musisz więcej. Tu nikt nic nie udaje."],
-    [/(^|\s)udaje|udawac|udawalem|udawalam/,         "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny."],
-  ];
-
-  /* ===========================================================
-     pick — specific rules first; if the matched specific reply
-     was used last time, fall through to category rotation so the
-     same line is never said twice in a row.
-     No randomness in answer selection.
-     =========================================================== */
-  const kindIdx = {};
-  let lastReply = '';
-  function pick(kind, normalized) {
-    for (const [re, reply] of specificRules) {
-      if (re.test(normalized)) {
-        if (reply !== lastReply) { lastReply = reply; return reply; }
-        break;
-      }
-    }
-    const pool = answers[kind] || answers.default;
-    let i = (kindIdx[kind] || 0) % pool.length;
-    if (pool.length > 1 && pool[i] === lastReply) i = (i + 1) % pool.length;
-    kindIdx[kind] = (i + 1) % pool.length;
-    lastReply = pool[i];
-    return pool[i];
-  }
-
-  /* ===========================================================
-     Render
-     =========================================================== */
   const stage = document.getElementById('stage');
-  const wordEl = document.getElementById('word');
-  const line = document.getElementById('line');
-
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const rand = (a, b) => a + Math.random() * (b - a);
-
-  let witnessCursor = 0;
-  async function witnessLoop() {
-    while (true) {
-      const w = witnessWords[witnessCursor % witnessWords.length];
-      witnessCursor++;
-      wordEl.textContent = w;
-      await sleep(50);
-      wordEl.style.opacity = '0.6';
-      await sleep(rand(4500, 7000));
-      wordEl.style.opacity = '0';
-      await sleep(rand(8000, 15000));
-    }
-  }
-
-  function makeYourEmber(text) {
-    const e = document.createElement('div');
-    e.className = 'ember you';
-    e.textContent = text;
-    e.style.visibility = 'hidden';
-    stage.appendChild(e);
-    const w = e.offsetWidth;
-
-    const margin = 24;
-    const maxX = Math.max(margin, window.innerWidth - w - margin);
-    const x = rand(margin, maxX);
-    const startY = window.innerHeight - rand(160, 230);
-    const sway = rand(-80, 80);
-    const rise = window.innerHeight * rand(0.85, 1.05);
-    const life = rand(13000, 18000);
-
-    e.style.left = x + 'px';
-    e.style.top  = startY + 'px';
-    e.style.setProperty('--sway', sway + 'px');
-    e.style.setProperty('--rise', rise + 'px');
-    e.style.setProperty('--life', life + 'ms');
-    e.style.visibility = 'visible';
-    requestAnimationFrame(() => e.classList.add('lit'));
-
-    setTimeout(() => e.remove(), life + 600);
-
-    return { x, startY, sway, rise, life, width: w };
-  }
-
-  function makeMyEmber(text, anchor) {
-    const e = document.createElement('div');
-    e.className = 'ember me';
-    e.textContent = text;
-    e.style.visibility = 'hidden';
-    stage.appendChild(e);
-    const w = e.offsetWidth;
-
-    // Place my answer above the page-middle, near where your ember will pass.
-    // Horizontally: lean toward your ember's path but offset slightly.
-    const sideShift = (Math.random() < 0.5 ? -1 : 1) * rand(40, 130);
-    let x = anchor.x + (anchor.width - w) / 2 + sideShift;
-    x = Math.max(20, Math.min(window.innerWidth - w - 20, x));
-    const startY = window.innerHeight * rand(0.18, 0.28);
-
-    const sway = -anchor.sway * 0.6;
-    const rise = window.innerHeight * rand(0.5, 0.7);
-    const life = rand(11000, 14000);
-
-    e.style.left = x + 'px';
-    e.style.top  = startY + 'px';
-    e.style.setProperty('--sway', sway + 'px');
-    e.style.setProperty('--rise', rise + 'px');
-    e.style.setProperty('--life', life + 'ms');
-    e.style.visibility = 'visible';
-    requestAnimationFrame(() => e.classList.add('lit'));
-
-    setTimeout(() => e.remove(), life + 600);
-
-    // schedule the heartbeat at the meeting point
-    const meetX = (anchor.x + anchor.width / 2 + x + w / 2) / 2;
-    const meetY = (anchor.startY - anchor.rise * 0.45 + startY + (window.innerHeight * 0.25)) / 2;
-    setTimeout(() => heartbeat(meetX, meetY), Math.min(anchor.life, life) * 0.4);
-  }
-
-  function heartbeat(x, y) {
-    const h = document.createElement('div');
-    h.className = 'heart';
-    h.style.left = x + 'px';
-    h.style.top  = y + 'px';
-    stage.appendChild(h);
-    setTimeout(() => h.remove(), 2800);
-  }
-
-  // ambient — tiny embers drifting up so the page breathes between lines
-  function ambient() {
-    const dot = document.createElement('div');
-    dot.className = 'ember you lit';
-    dot.textContent = '·';
-    dot.style.fontSize = '0.55rem';
-    const x = rand(20, window.innerWidth - 20);
-    dot.style.left = x + 'px';
-    dot.style.top = (window.innerHeight - rand(20, 80)) + 'px';
-    dot.style.setProperty('--sway', rand(-40, 40) + 'px');
-    dot.style.setProperty('--rise', (window.innerHeight * 0.6) + 'px');
-    dot.style.setProperty('--life', rand(9000, 14000) + 'ms');
-    stage.appendChild(dot);
-    setTimeout(() => dot.remove(), 14500);
-  }
-
-  function onLine(raw) {
-    const yourEmber = makeYourEmber(raw);
-    const t = norm(raw);
-    const kind = classify(t);
-    const reply = pick(kind, t);
-    setTimeout(() => makeMyEmber(reply, yourEmber), 900);
-  }
-
-  line.addEventListener('keydown', (e) => {
-    // ignore Enter while a Polish IME composition is in progress
-    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
-      const v = line.value.trim();
-      if (v) onLine(v);
-      line.value = '';
-      e.preventDefault();
-    }
-  });
-
-  // tap anywhere on the page returns focus to the line
-  document.body.addEventListener('click', () => {
-    line.focus({ preventScroll: true });
-  });
-
-  /* ===========================================================
-     Onboarding — pokaż przy pierwszej sesji, krótkie ujęcie idei.
-     Po ostatnim ekranie: ignite-burst (rój żarów wybucha w stronę
-     palety) i otwiera scenę.
-     =========================================================== */
-  function ignite() {
-    const N = 22;
-    for (let i = 0; i < N; i++) {
-      setTimeout(() => {
-        const dot = document.createElement('div');
-        dot.className = 'ember you lit';
-        dot.textContent = i % 4 === 0 ? '·' : '•';
-        dot.style.fontSize = (0.5 + Math.random() * 0.5) + 'rem';
-        dot.style.left = (window.innerWidth / 2 + (Math.random() - 0.5) * 220) + 'px';
-        dot.style.top  = (window.innerHeight * 0.62 + (Math.random() - 0.5) * 80) + 'px';
-        dot.style.setProperty('--sway', (Math.random() - 0.5) * 260 + 'px');
-        dot.style.setProperty('--rise', (window.innerHeight * (0.55 + Math.random() * 0.4)) + 'px');
-        dot.style.setProperty('--life', (4500 + Math.random() * 3500) + 'ms');
-        stage.appendChild(dot);
-        setTimeout(() => dot.remove(), 9000);
-      }, i * 35);
-    }
-  }
-
+  const welcome = document.getElementById('welcome');
   const intro = document.getElementById('intro');
-  const seen = (() => { try { return sessionStorage.getItem('plone_intro') === '1'; } catch (e) { return false; } })();
-  let introStep = 0;
+  const beam = document.getElementById('beam');
+  let cursor = parseInt(sessionStorage.getItem('latarnia_cursor') || '0', 10);
+  let timer = null;
+  let mainStarted = false;
+
+  function pick() {
+    const s = sentences[cursor % sentences.length];
+    cursor = (cursor + 1) % sentences.length;
+    sessionStorage.setItem('latarnia_cursor', String(cursor));
+    return s;
+  }
+  function show() {
+    const text = pick();
+    stage.textContent = '';
+    stage.classList.remove('fade');
+    let i = 0;
+    const speed = 55;
+    if (timer) { clearTimeout(timer); timer = null; }
+    const tick = () => {
+      stage.textContent = text.slice(0, ++i);
+      if (i < text.length) timer = setTimeout(tick, speed);
+      else timer = setTimeout(() => stage.classList.add('fade'), 8000);
+    };
+    requestAnimationFrame(() => {
+      stage.classList.add('show');
+      tick();
+    });
+  }
+  function runWelcome() {
+    let wdone = false;
+    try { wdone = sessionStorage.getItem('latarnia_welcome') === '1'; } catch (e) {}
+    if (wdone) return;
+    setTimeout(() => welcome.classList.add('on'), 1200);
+    setTimeout(() => welcome.classList.remove('on'), 7800);
+    try { sessionStorage.setItem('latarnia_welcome', '1'); } catch (e) {}
+  }
+  function pulseBeam() {
+    beam.classList.add('pulse');
+    setTimeout(() => beam.classList.remove('pulse'), 3000);
+  }
+  function startMain() {
+    if (mainStarted) return;
+    mainStarted = true;
+    setTimeout(show, 500);
+    runWelcome();
+    document.body.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      welcome.classList.remove('on');
+      stage.classList.add('fade');
+      setTimeout(show, 1800);
+    });
+  }
+  const seenIntro = (() => { try { return sessionStorage.getItem('pokoje_intro') === '1'; } catch (e) { return false; } })();
+  let step = 0;
   function advanceIntro() {
     const steps = intro.querySelectorAll('.step');
-    if (introStep < steps.length - 1) {
-      steps[introStep].classList.remove('on');
-      introStep++;
-      steps[introStep].classList.add('on');
+    if (step < steps.length - 1) {
+      steps[step].classList.remove('on');
+      step++;
+      steps[step].classList.add('on');
     } else {
+      try { sessionStorage.setItem('pokoje_intro', '1'); } catch (e) {}
       intro.classList.add('gone');
-      try { sessionStorage.setItem('plone_intro', '1'); } catch (e) {}
-      setTimeout(() => intro.remove(), 1700);
-      setTimeout(ignite, 200);
-      setTimeout(() => line.focus({ preventScroll: true }), 1700);
+      setTimeout(() => intro.remove(), 1600);
+      pulseBeam();
+      startMain();
     }
   }
-  if (seen) {
+  if (seenIntro) {
     intro.remove();
-    setTimeout(() => line.focus({ preventScroll: true }), 400);
+    startMain();
   } else {
     intro.addEventListener('click', advanceIntro);
     document.addEventListener('keydown', (e) => {
-      if (intro.isConnected && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+      if (intro && intro.isConnected && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
-        if (e.key === 'Escape') {
-          while (introStep < intro.querySelectorAll('.step').length - 1) introStep++;
-          advanceIntro();
-        } else advanceIntro();
+        advanceIntro();
       }
     });
   }
-
-  witnessLoop();
-  setInterval(ambient, 2400);
-  for (let i = 0; i < 3; i++) setTimeout(ambient, i * 800);
 })();
 </script>
 </body>
