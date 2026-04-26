@@ -200,72 +200,531 @@
     text-transform: uppercase;
     color: rgba(233, 227, 211, 0.26);
   }
+
+  /* === language switcher === */
+  #langbar {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.2rem;
+    z-index: 200;
+    display: flex;
+    gap: 0.05rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  #langbar button {
+    background: transparent;
+    border: none;
+    color: rgba(233, 227, 211, 0.22);
+    cursor: pointer;
+    padding: 0.28rem 0.45rem;
+    font: inherit;
+    letter-spacing: inherit;
+    transition: color 0.6s ease;
+  }
+  #langbar button:hover { color: rgba(217, 183, 121, 0.7); }
+  #langbar button.on    { color: rgba(217, 183, 121, 0.95); }
+  #langbar .sep {
+    color: rgba(233, 227, 211, 0.10);
+    align-self: center;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
-  <div id="intro" role="dialog" aria-label="Wprowadzenie">
+  <nav id="langbar" aria-label="Język / language"></nav>
+  <div id="intro" role="dialog" aria-label="">
     <div class="panel">
       <div class="step on" data-step="0">
-        <h2>Latarnia</h2>
-        <p>Przystań. Jedno zdanie i oddech — bez pośpiechu, bez wymogów.</p>
-        <p class="dim">Później możesz wejść dalej. Na start wystarczy być.</p>
-        <div class="hint">Kliknij, aby przejść dalej</div>
+        <h2 data-i18n="intro.step0.h2">Latarnia</h2>
+        <p data-i18n="intro.step0.p1"></p>
+        <p class="dim" data-i18n="intro.step0.p2"></p>
+        <div class="hint" data-i18n="intro.step0.hint"></div>
       </div>
       <div class="step" data-step="1">
-        <h2>Trzy pokoje</h2>
-        <p>To jeden projekt, trzy ciche miejsca w przeglądarce. Nic nie wysyłamy — wszystko zostaje u ciebie.</p>
+        <h2 data-i18n="intro.step1.h2"></h2>
+        <p data-i18n="intro.step1.p1"></p>
         <div class="rooms">
-          <div><b>Latarnia</b> — tu. Pauza, jedno zdanie.</div>
-          <div><b>Płonę</b> — gdy w środku za gorąco, słowo w odpowiedź.</div>
-          <div><b>Pomiędzy</b> — list do siebie, do otwarcia w wybranym dniu.</div>
+          <div><b data-i18n="intro.step1.r1.name"></b><span data-i18n="intro.step1.r1.text"></span></div>
+          <div><b data-i18n="intro.step1.r2.name"></b><span data-i18n="intro.step1.r2.text"></span></div>
+          <div><b data-i18n="intro.step1.r3.name"></b><span data-i18n="intro.step1.r3.text"></span></div>
         </div>
-        <p class="dim">Bez konta. Bez śladu. Bez chmury.</p>
-        <div class="hint">Kliknij, aby wejść</div>
+        <p class="dim" data-i18n="intro.step1.p2"></p>
+        <div class="hint" data-i18n="intro.step1.hint"></div>
       </div>
     </div>
   </div>
   <div class="beam" id="beam"></div>
   <div class="core"></div>
   <div class="glow"></div>
-  <div id="welcome">kiedy nic nie chce się chcieć — zostań chwilę. jedno zdanie czeka, dopóki jesteś.</div>
+  <div id="welcome"></div>
   <div id="stage"></div>
-  <a class="room left"  href="plone/"    aria-label="Płonę">płonę</a>
-  <a class="room right" href="pomiedzy/" aria-label="Pomiędzy">pomiędzy</a>
-  <div class="mark">latarnia</div>
+  <a class="room left"  href="plone/"    id="room-left"></a>
+  <a class="room right" href="pomiedzy/" id="room-right"></a>
+  <div class="mark" id="mark"></div>
 <script>
 (() => {
-  const sentences = [
-    "Wystarczyło, że dziś oddychałeś.",
-    "Nie musisz wszystkiego dzisiaj.",
-    "Cisza też jest odpowiedzią.",
-    "Jesteś tu. To dużo.",
-    "Jutro to inna doba, nie ten sam dzień.",
-    "Wolno ci nie wiedzieć.",
-    "Twoje tempo nie jest błędem.",
-    "Świat poczeka chwilę.",
-    "Nie wszystko musi mieć sens dzisiaj.",
-    "Spokojny oddech to też modlitwa.",
-    "Nie jesteś zaległą wersją siebie.",
-    "Wystarczy, że tu zostałeś.",
-    "Drobne ruchy też są ruchem.",
-    "Łagodność jest siłą, której nikt nie zauważa.",
-    "Wolno ci się rozpadać i wrócić.",
-    "Pozwól, żeby się zaczęło samo.",
-    "Tylko ten oddech. Tylko ten.",
-    "Jest dobrze.",
-    "Możesz zacząć od nowa o czternastej.",
-    "Ciało wie, co robić, gdy mu nie przeszkadzasz.",
-    "Strach to też informacja.",
-    "Czułość do siebie nie jest słabością.",
-    "Czas robi swoje, gdy ty śpisz.",
-    "Wystarczy, że to przeczytałeś.",
-    "Pozwól sobie być małym dzisiaj.",
-    "Świat jest większy niż twoje myśli o nim.",
-    "Jesteś dzieckiem, które się starało.",
-    "Trzymam cię. Choćby przez chwilę.",
-    "To, co cię zatrzymuje, też cię chroni.",
-    "Pozwól. Po prostu pozwól."
-  ];
+  /* ===========================================================
+     i18n — five languages, Polish primary.
+     =========================================================== */
+  const LANG = {
+    pl: {
+      meta: {
+        htmlLang: 'pl',
+        ogLocale: 'pl_PL',
+        title: 'Latarnia — trzy pokoje: pauza, ogień, list',
+        description: 'Latarnia: jedno zdanie na pauzę. Płonę: gdy w środku za gorąco. Pomiędzy: list w czas. Bez konta, bez danych na serwerze.',
+        ogTitle: 'Latarnia',
+        ogDescription: 'Jedno zdanie, spokojny oddech. Potem, jeśli trzeba — Płonę albo Pomiędzy. Nic nie wychodzi w chmurę.',
+        twitterDescription: 'Jedno zdanie, spokojny oddech. Potem, jeśli trzeba — Płonę albo Pomiędzy.'
+      },
+      ui: {
+        introAria: 'Wprowadzenie',
+        welcome: 'kiedy nic nie chce się chcieć — zostań chwilę. jedno zdanie czeka, dopóki jesteś.',
+        roomLeftLabel: 'płonę',
+        roomLeftAria: 'Płonę',
+        roomRightLabel: 'pomiędzy',
+        roomRightAria: 'Pomiędzy',
+        mark: 'latarnia'
+      },
+      intro: {
+        step0: {
+          h2: 'Latarnia',
+          p1: 'Przystań. Jedno zdanie i oddech — bez pośpiechu, bez wymogów.',
+          p2: 'Później możesz wejść dalej. Na start wystarczy być.',
+          hint: 'Kliknij, aby przejść dalej'
+        },
+        step1: {
+          h2: 'Trzy pokoje',
+          p1: 'To jeden projekt, trzy ciche miejsca w przeglądarce. Nic nie wysyłamy — wszystko zostaje u ciebie.',
+          r1: { name: 'Latarnia', text: ' — tu. Pauza, jedno zdanie.' },
+          r2: { name: 'Płonę',    text: ' — gdy w środku za gorąco, słowo w odpowiedź.' },
+          r3: { name: 'Pomiędzy', text: ' — list do siebie, do otwarcia w wybranym dniu.' },
+          p2: 'Bez konta. Bez śladu. Bez chmury.',
+          hint: 'Kliknij, aby wejść'
+        }
+      },
+      sentences: [
+        "Wystarczyło, że dziś oddychałeś.",
+        "Nie musisz wszystkiego dzisiaj.",
+        "Cisza też jest odpowiedzią.",
+        "Jesteś tu. To dużo.",
+        "Jutro to inna doba, nie ten sam dzień.",
+        "Wolno ci nie wiedzieć.",
+        "Twoje tempo nie jest błędem.",
+        "Świat poczeka chwilę.",
+        "Nie wszystko musi mieć sens dzisiaj.",
+        "Spokojny oddech to też modlitwa.",
+        "Nie jesteś zaległą wersją siebie.",
+        "Wystarczy, że tu zostałeś.",
+        "Drobne ruchy też są ruchem.",
+        "Łagodność jest siłą, której nikt nie zauważa.",
+        "Wolno ci się rozpadać i wrócić.",
+        "Pozwól, żeby się zaczęło samo.",
+        "Tylko ten oddech. Tylko ten.",
+        "Jest dobrze.",
+        "Możesz zacząć od nowa o czternastej.",
+        "Ciało wie, co robić, gdy mu nie przeszkadzasz.",
+        "Strach to też informacja.",
+        "Czułość do siebie nie jest słabością.",
+        "Czas robi swoje, gdy ty śpisz.",
+        "Wystarczy, że to przeczytałeś.",
+        "Pozwól sobie być małym dzisiaj.",
+        "Świat jest większy niż twoje myśli o nim.",
+        "Jesteś dzieckiem, które się starało.",
+        "Trzymam cię. Choćby przez chwilę.",
+        "To, co cię zatrzymuje, też cię chroni.",
+        "Pozwól. Po prostu pozwól.",
+        "Jakoś to będzie. Tylko nie dziś samo.",
+        "Po każdej nocy przychodzi dzień. Nawet po tej.",
+        "Co za dużo, to za dużo. Połóż połowę."
+      ]
+    },
+    en: {
+      meta: {
+        htmlLang: 'en',
+        ogLocale: 'en_US',
+        title: 'Lighthouse — three rooms: pause, fire, letter',
+        description: "Lighthouse: one sentence to pause. Płonę: when it's too hot inside. Between: a letter in time. No account, nothing on a server.",
+        ogTitle: 'Lighthouse',
+        ogDescription: "One sentence, a calm breath. Then, if you need — Płonę or Between. Nothing leaves your screen.",
+        twitterDescription: "One sentence, a calm breath. Then, if you need — Płonę or Between."
+      },
+      ui: {
+        introAria: 'Intro',
+        welcome: "when nothing wants to want — stay a minute. one sentence is waiting, as long as you're here.",
+        roomLeftLabel: 'płonę',
+        roomLeftAria: 'Płonę — burn it',
+        roomRightLabel: 'between',
+        roomRightAria: 'Between — letter to your future self',
+        mark: 'lighthouse'
+      },
+      intro: {
+        step0: {
+          h2: 'Lighthouse',
+          p1: "A harbor. One sentence and a breath — no rush, no homework.",
+          p2: "Later you can step further in. For now, just being is enough.",
+          hint: 'Tap to continue'
+        },
+        step1: {
+          h2: 'Three rooms',
+          p1: "One project, three quiet spots in your browser. Nothing leaves — everything stays with you.",
+          r1: { name: 'Lighthouse', text: " — right here. Pause, one sentence." },
+          r2: { name: 'Płonę',      text: " — when it's too hot inside, a word in answer." },
+          r3: { name: 'Between',    text: ' — a letter to yourself, opens on the day you pick.' },
+          p2: "No account. No trace. No cloud.",
+          hint: 'Tap to step in'
+        }
+      },
+      sentences: [
+        "It's enough that you breathed today.",
+        "You don't have to do everything today.",
+        "Silence is an answer too.",
+        "You're here. That's a lot.",
+        "Tomorrow is another day, not the same one.",
+        "You're allowed not to know.",
+        "Your pace isn't a mistake.",
+        "The world can wait a minute.",
+        "Not everything has to make sense today.",
+        "A quiet breath is a kind of prayer.",
+        "You're not a behind-schedule version of yourself.",
+        "It's enough that you stayed here.",
+        "Small moves are still moves.",
+        "Gentleness is a strength nobody notices.",
+        "You're allowed to fall apart and come back.",
+        "Let it start by itself.",
+        "Just this breath. Just this one.",
+        "It's okay.",
+        "You can start over at 2pm.",
+        "Your body knows what to do when you stop interfering.",
+        "Fear is information too.",
+        "Tenderness toward yourself isn't weakness.",
+        "Time works on it while you sleep.",
+        "It's enough that you read this.",
+        "You're allowed to be small today.",
+        "The world is bigger than your thoughts about it.",
+        "You're a kid who was trying.",
+        "I've got you. Even for a minute.",
+        "What's holding you also protects you.",
+        "Let it. Just let it.",
+        "It'll work itself out. Just not today, alone.",
+        "After every night, a day comes. Even after this one.",
+        "Too much is too much. Put half of it down."
+      ]
+    },
+    es: {
+      meta: {
+        htmlLang: 'es',
+        ogLocale: 'es_ES',
+        title: 'Faro — tres cuartos: pausa, fuego, carta',
+        description: 'Faro: una frase para pausa. Płonę: cuando dentro hace demasiado. Entremedio: una carta en el tiempo. Sin cuenta, sin servidor.',
+        ogTitle: 'Faro',
+        ogDescription: 'Una frase, una respiración tranquila. Después, si hace falta — Płonę o Entremedio. Nada sale de tu pantalla.',
+        twitterDescription: 'Una frase, una respiración tranquila. Después, si hace falta — Płonę o Entremedio.'
+      },
+      ui: {
+        introAria: 'Intro',
+        welcome: 'cuando nada quiere querer — quédate un rato. una frase espera mientras estés.',
+        roomLeftLabel: 'płonę',
+        roomLeftAria: 'Płonę — quemar con palabras',
+        roomRightLabel: 'entremedio',
+        roomRightAria: 'Entremedio — carta a tu yo del futuro',
+        mark: 'faro'
+      },
+      intro: {
+        step0: {
+          h2: 'Faro',
+          p1: 'Un puerto. Una frase y una respiración — sin prisa, sin tareas.',
+          p2: 'Después puedes entrar más. De entrada, basta con estar.',
+          hint: 'Toca para continuar'
+        },
+        step1: {
+          h2: 'Tres cuartos',
+          p1: 'Un proyecto, tres sitios callados en tu navegador. Nada sale — todo se queda contigo.',
+          r1: { name: 'Faro',       text: ' — aquí mismo. Pausa, una frase.' },
+          r2: { name: 'Płonę',      text: ' — cuando dentro hace demasiado, una palabra en respuesta.' },
+          r3: { name: 'Entremedio', text: ' — una carta para ti, se abre el día que tú elijas.' },
+          p2: 'Sin cuenta. Sin huella. Sin nube.',
+          hint: 'Toca para entrar'
+        }
+      },
+      sentences: [
+        "Bastó con que hoy respiraras.",
+        "No tienes que con todo hoy.",
+        "El silencio también es respuesta.",
+        "Estás aquí. Eso es mucho.",
+        "Mañana es otro día, no el mismo.",
+        "Te puedes permitir no saber.",
+        "Tu ritmo no es un error.",
+        "El mundo puede esperar un momento.",
+        "No todo tiene que tener sentido hoy.",
+        "Una respiración tranquila también es una oración.",
+        "No eres una versión atrasada de ti.",
+        "Basta con que te hayas quedado aquí.",
+        "Los movimientos pequeños también son movimientos.",
+        "La suavidad es una fuerza que nadie ve.",
+        "Te puedes deshacer y volver.",
+        "Deja que empiece solo.",
+        "Solo esta respiración. Solo esta.",
+        "Está bien.",
+        "Puedes empezar de nuevo a las dos de la tarde.",
+        "El cuerpo sabe qué hacer cuando dejas de molestarlo.",
+        "El miedo también es información.",
+        "La ternura contigo no es debilidad.",
+        "El tiempo hace lo suyo mientras duermes.",
+        "Basta con que leíste esto.",
+        "Te puedes permitir ser pequeño hoy.",
+        "El mundo es más grande que tus pensamientos sobre él.",
+        "Eres un niño que se estaba esforzando.",
+        "Te tengo. Aunque sea un momento.",
+        "Lo que te detiene también te protege.",
+        "Deja. Solo deja.",
+        "Algo se va a ordenar. Solo que hoy no, en solitario.",
+        "Después de cada noche viene un día. Hasta después de esta.",
+        "Demasiado es demasiado. Suelta la mitad."
+      ]
+    },
+    nl: {
+      meta: {
+        htmlLang: 'nl',
+        ogLocale: 'nl_NL',
+        title: 'Vuurtoren — drie kamers: pauze, vuur, brief',
+        description: 'Vuurtoren: één zin om te pauzeren. Płonę: als het binnen te heet wordt. Tussen: een brief door de tijd. Geen account, niets op een server.',
+        ogTitle: 'Vuurtoren',
+        ogDescription: 'Eén zin, een rustige adem. Daarna, als het moet — Płonę of Tussen. Niets verlaat je scherm.',
+        twitterDescription: 'Eén zin, een rustige adem. Daarna, als het moet — Płonę of Tussen.'
+      },
+      ui: {
+        introAria: 'Intro',
+        welcome: 'als niets wil willen — blijf even. één zin wacht, zolang je er bent.',
+        roomLeftLabel: 'płonę',
+        roomLeftAria: 'Płonę — verbranden met woorden',
+        roomRightLabel: 'tussen',
+        roomRightAria: 'Tussen — brief aan je toekomstige zelf',
+        mark: 'vuurtoren'
+      },
+      intro: {
+        step0: {
+          h2: 'Vuurtoren',
+          p1: 'Een haven. Eén zin en een adem — geen haast, geen huiswerk.',
+          p2: 'Later kun je verder. Om te beginnen is er-zijn genoeg.',
+          hint: 'Tik om verder te gaan'
+        },
+        step1: {
+          h2: 'Drie kamers',
+          p1: 'Eén project, drie stille plekken in je browser. Niets vertrekt — alles blijft bij jou.',
+          r1: { name: 'Vuurtoren', text: ' — hier. Pauze, één zin.' },
+          r2: { name: 'Płonę',     text: ' — als het binnen te heet wordt, een woord als antwoord.' },
+          r3: { name: 'Tussen',    text: ' — een brief aan jezelf, opent op de dag die jij kiest.' },
+          p2: 'Geen account. Geen spoor. Geen cloud.',
+          hint: 'Tik om binnen te stappen'
+        }
+      },
+      sentences: [
+        "Het was genoeg dat je vandaag ademde.",
+        "Je hoeft vandaag niet alles.",
+        "Stilte is ook een antwoord.",
+        "Je bent er. Dat is veel.",
+        "Morgen is een andere dag, niet dezelfde.",
+        "Je mag het niet weten.",
+        "Jouw tempo is geen fout.",
+        "De wereld kan een minuut wachten.",
+        "Niet alles hoeft vandaag te kloppen.",
+        "Een rustige adem is ook een gebed.",
+        "Je bent geen achterloop-versie van jezelf.",
+        "Het is genoeg dat je hier bleef.",
+        "Kleine bewegingen zijn ook bewegingen.",
+        "Zachtheid is een kracht die niemand opmerkt.",
+        "Je mag uit elkaar vallen en terugkomen.",
+        "Laat het vanzelf beginnen.",
+        "Alleen deze adem. Alleen deze.",
+        "Het is goed.",
+        "Je mag om twee uur 's middags opnieuw beginnen.",
+        "Je lichaam weet wat het moet doen als jij hem laat.",
+        "Angst is ook informatie.",
+        "Zachtheid voor jezelf is geen zwakte.",
+        "Tijd doet zijn werk terwijl jij slaapt.",
+        "Het is genoeg dat je dit las.",
+        "Je mag vandaag klein zijn.",
+        "De wereld is groter dan je gedachten erover.",
+        "Je bent een kind dat zijn best deed.",
+        "Ik heb je. Al is het maar even.",
+        "Wat je tegenhoudt, beschermt je ook.",
+        "Laat het. Laat gewoon.",
+        "Het komt goed. Vandaag alleen niet alleen.",
+        "Na elke nacht komt een dag. Ook na deze.",
+        "Te veel is te veel. Leg de helft neer."
+      ]
+    },
+    uk: {
+      meta: {
+        htmlLang: 'uk',
+        ogLocale: 'uk_UA',
+        title: 'Маяк — три кімнати: пауза, вогонь, лист',
+        description: 'Маяк: одне речення для паузи. Płonę: коли всередині надто гаряче. Між: лист у часі. Без акаунта, нічого на сервері.',
+        ogTitle: 'Маяк',
+        ogDescription: 'Одне речення, спокійний подих. Потім, якщо треба — Płonę або Між. Нічого не виходить з твого екрана.',
+        twitterDescription: 'Одне речення, спокійний подих. Потім, якщо треба — Płonę або Між.'
+      },
+      ui: {
+        introAria: 'Вступ',
+        welcome: 'коли нічого не хочеться — побудь хвильку. одне речення чекає, поки ти тут.',
+        roomLeftLabel: 'płonę',
+        roomLeftAria: 'Płonę — спалити словом',
+        roomRightLabel: 'між',
+        roomRightAria: 'Між — лист собі в майбутнє',
+        mark: 'маяк'
+      },
+      intro: {
+        step0: {
+          h2: 'Маяк',
+          p1: 'Гавань. Одне речення і один подих — без поспіху, без обовʼязків.',
+          p2: 'Потім можеш зайти далі. Для початку досить просто бути.',
+          hint: 'Тапни, щоб іти далі'
+        },
+        step1: {
+          h2: 'Три кімнати',
+          p1: 'Один проєкт, три тихі куточки в твоєму браузері. Нічого не виходить назовні — все залишається з тобою.',
+          r1: { name: 'Маяк',  text: ' — тут. Пауза, одне речення.' },
+          r2: { name: 'Płonę', text: ' — коли всередині надто гаряче, слово у відповідь.' },
+          r3: { name: 'Між',   text: ' — лист собі, відкриється у вибраний день.' },
+          p2: 'Без акаунта. Без сліду. Без хмари.',
+          hint: 'Тапни, щоб зайти'
+        }
+      },
+      sentences: [
+        "Достатньо того, що ти сьогодні дихав.",
+        "Не мусиш сьогодні всього.",
+        "Тиша теж є відповіддю.",
+        "Ти тут. Це багато.",
+        "Завтра — це інший день, не той самий.",
+        "Можна не знати.",
+        "Твій темп — не помилка.",
+        "Світ почекає хвильку.",
+        "Не все мусить мати сенс сьогодні.",
+        "Спокійний подих — теж молитва.",
+        "Ти не запізніла версія себе.",
+        "Достатньо того, що ти лишився.",
+        "Маленькі рухи — теж рухи.",
+        "Лагідність — це сила, якої ніхто не помічає.",
+        "Можна розсипатись і повернутись.",
+        "Дозволь, щоб почалось саме.",
+        "Тільки цей подих. Тільки цей.",
+        "Все добре.",
+        "Можеш почати знову о другій після обіду.",
+        "Тіло знає, що робити, коли йому не заважати.",
+        "Страх — теж інформація.",
+        "Ніжність до себе — не слабкість.",
+        "Час робить своє, поки ти спиш.",
+        "Достатньо того, що ти це прочитав.",
+        "Можеш сьогодні бути маленьким.",
+        "Світ більший за твої думки про нього.",
+        "Ти — дитина, яка старалась.",
+        "Тримаю тебе. Хоча б на хвильку.",
+        "Те, що тебе зупиняє, теж тебе захищає.",
+        "Дозволь. Просто дозволь.",
+        "Якось буде. Просто сьогодні не сам.",
+        "Після кожної ночі приходить день. Навіть після цієї.",
+        "Забагато — це забагато. Половину постав."
+      ]
+    }
+  };
+
+  function detectLang() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const fromUrl = params.get('lang');
+      if (fromUrl && LANG[fromUrl]) {
+        try { localStorage.setItem('plone_lang', fromUrl); } catch (e) {}
+        return fromUrl;
+      }
+      const stored = localStorage.getItem('plone_lang');
+      if (stored && LANG[stored]) return stored;
+    } catch (e) {}
+    return 'pl';
+  }
+
+  const ACTIVE = detectLang();
+  const L = LANG[ACTIVE];
+
+  function applyShell() {
+    document.documentElement.lang = L.meta.htmlLang;
+    document.title = L.meta.title;
+    const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el && val) el.setAttribute('content', val); };
+    setMeta('meta[name="description"]', L.meta.description);
+    setMeta('meta[property="og:title"]', L.meta.ogTitle);
+    setMeta('meta[property="og:description"]', L.meta.ogDescription);
+    setMeta('meta[property="og:locale"]', L.meta.ogLocale);
+    setMeta('meta[name="twitter:title"]', L.meta.ogTitle);
+    setMeta('meta[name="twitter:description"]', L.meta.twitterDescription || L.meta.ogDescription);
+
+    const intro = document.getElementById('intro');
+    if (intro) intro.setAttribute('aria-label', L.ui.introAria);
+
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.textContent = L.ui.welcome;
+
+    const left = document.getElementById('room-left');
+    if (left) {
+      left.textContent = L.ui.roomLeftLabel;
+      left.setAttribute('aria-label', L.ui.roomLeftAria);
+    }
+    const right = document.getElementById('room-right');
+    if (right) {
+      right.textContent = L.ui.roomRightLabel;
+      right.setAttribute('aria-label', L.ui.roomRightAria);
+    }
+    const mark = document.getElementById('mark');
+    if (mark) mark.textContent = L.ui.mark;
+
+    /* fill all data-i18n elements via dotted path lookup */
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const path = el.getAttribute('data-i18n');
+      const parts = path.split('.');
+      let v = L;
+      for (const p of parts) { v = v && v[p]; }
+      if (typeof v === 'string') el.textContent = v;
+    });
+  }
+
+  function buildLangBar() {
+    const bar = document.getElementById('langbar');
+    if (!bar) return;
+    const order = ['pl', 'en', 'es', 'nl', 'uk'];
+    bar.innerHTML = '';
+    order.forEach((code, idx) => {
+      if (idx > 0) {
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = '·';
+        bar.appendChild(sep);
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = code;
+      b.setAttribute('aria-label', code.toUpperCase());
+      if (code === ACTIVE) b.classList.add('on');
+      b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (code === ACTIVE) return;
+        try { localStorage.setItem('plone_lang', code); } catch (e) {}
+        try { sessionStorage.removeItem('pokoje_intro'); } catch (e) {}
+        const url = new URL(location.href);
+        url.searchParams.set('lang', code);
+        location.href = url.toString();
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  applyShell();
+  buildLangBar();
+
+  const sentences = L.sentences;
   const stage = document.getElementById('stage');
   const welcome = document.getElementById('welcome');
   const intro = document.getElementById('intro');
@@ -319,11 +778,11 @@
   }
   function runWelcome() {
     let wdone = false;
-    try { wdone = sessionStorage.getItem('latarnia_welcome') === '1'; } catch (e) {}
+    try { wdone = sessionStorage.getItem('latarnia_welcome_' + ACTIVE) === '1'; } catch (e) {}
     if (wdone) return;
     setTimeout(() => welcome.classList.add('on'), 1200);
     setTimeout(() => welcome.classList.remove('on'), 7800);
-    try { sessionStorage.setItem('latarnia_welcome', '1'); } catch (e) {}
+    try { sessionStorage.setItem('latarnia_welcome_' + ACTIVE, '1'); } catch (e) {}
   }
   function pulseBeam() {
     beam.classList.add('pulse');
@@ -337,6 +796,7 @@
     runWelcome();
     document.body.addEventListener('click', (e) => {
       if (e.target.closest('a')) return;
+      if (e.target.closest('#langbar')) return;
       const now = Date.now();
       if (now - lastClickAt < 600) return;
       lastClickAt = now;
@@ -364,7 +824,10 @@
     intro.remove();
     startMain();
   } else {
-    intro.addEventListener('click', advanceIntro);
+    intro.addEventListener('click', (e) => {
+      if (e.target.closest('#langbar')) return;
+      advanceIntro();
+    });
     document.addEventListener('keydown', (e) => {
       if (intro && intro.isConnected && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();

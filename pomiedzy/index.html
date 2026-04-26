@@ -110,7 +110,7 @@
     font-size: 0.95rem;
     color-scheme: dark;
   }
-  button {
+  button.primary {
     background: transparent;
     border: 1px solid var(--gold);
     color: var(--gold);
@@ -124,7 +124,7 @@
     transition: background 0.3s ease, color 0.3s ease;
     margin-top: 1.4rem;
   }
-  button:hover { background: var(--gold); color: var(--bg); }
+  button.primary:hover { background: var(--gold); color: var(--bg); }
   .note {
     margin-top: 2.5rem;
     color: var(--ink-faint);
@@ -190,7 +190,6 @@
   .room.left  { left: 1.4rem; }
   .room.right { right: 1.4rem; }
 
-  /* welcome line — zwięzły kontekst */
   .welcome {
     color: var(--ink-faint);
     font-family: 'Cormorant Garamond', serif;
@@ -255,18 +254,362 @@
     100% { transform: scale(1.4)  rotate(0deg); opacity: 0; filter: blur(8px); }
   }
   .stamp-glyph { position: relative; z-index: 1; }
+
+  /* === language switcher === */
+  #langbar {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.2rem;
+    z-index: 200;
+    display: flex;
+    gap: 0.05rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  #langbar button {
+    background: transparent;
+    border: none;
+    color: rgba(233, 227, 211, 0.22);
+    cursor: pointer;
+    padding: 0.28rem 0.45rem;
+    font: inherit;
+    letter-spacing: inherit;
+    transition: color 0.6s ease;
+  }
+  #langbar button:hover { color: rgba(217, 183, 121, 0.7); }
+  #langbar button.on    { color: rgba(217, 183, 121, 0.95); }
+  #langbar .sep {
+    color: rgba(233, 227, 211, 0.10);
+    align-self: center;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
+<nav id="langbar" aria-label="Język / language"></nav>
 <div class="wrap" id="root"></div>
 <div id="seal-fx" aria-hidden="true"><div class="stamp"><span class="stamp-glyph">P</span></div></div>
-<a class="room left"  href="../plone/"  aria-label="Płonę">płonę</a>
-<a class="room right" href="../"         aria-label="Latarnia">latarnia</a>
+<a class="room left"  href="../plone/" id="room-left"></a>
+<a class="room right" href="../"        id="room-right"></a>
 
 <script>
 const SEALED_PAYLOAD = null;
+const SEALED_LANG = null;
 const PRISTINE_SOURCE = document.documentElement.outerHTML;
 const POM_KEY_PEPPER = 'pomiedzy:v2';
+
+const LANG = {
+  pl: {
+    meta: {
+      htmlLang: 'pl',
+      ogLocale: 'pl_PL',
+      dateLocale: 'pl-PL',
+      title: 'Pomiędzy — list do siebie w przyszłość',
+      description: 'Napisz, zaplombuj. Plik wraca do ciebie w wybranym dniu. Nic nie wychodzi z tej strony.',
+      ogTitle: 'Pomiędzy',
+      ogDescription: 'List do siebie. Otworzy się dopiero w wybranym dniu.'
+    },
+    ui: {
+      langAria: 'Język / language',
+      mark: 'pomiędzy',
+      roomLeftLabel: 'płonę',
+      roomLeftAria: 'Płonę',
+      roomRightLabel: 'latarnia',
+      roomRightAria: 'Latarnia'
+    },
+    create: {
+      h1: 'Pomiędzy',
+      sub: 'List do siebie. Otworzy się dopiero w wybranym dniu.',
+      welcome: 'Napisz, co chcesz powiedzieć sobie później. Nic nie wychodzi z tej strony — plik powstaje u ciebie i wraca do ciebie wtedy, kiedy ustalisz.',
+      placeholder: 'Drogi przyszły ja…',
+      whenLabel: 'Otworzyć dnia',
+      button: 'Zaplombuj',
+      noteLine1: 'Nic nie wychodzi z tej strony. Pobierzesz plik .html: treść w środku domyka się w wybranym dniu (nazwa zaczyna się kropką, żeby w Pobraniach mniej rzucał się w oczy).',
+      noteLine2: 'Pełnej blokady jak od banku płatności nie obiecuje nikt bez serwera — tu chodzi o skuteczną, ludzką pauzę, nie wojnę szyfrową.'
+    },
+    sealed: {
+      h1: 'Zaplombowane',
+      sub: 'To po twojej stronie, do tej daty tylko odliczanie — bez treści w jasnym tekście w pliku.',
+      whenPrefix: 'otworzy się ',
+      noteLine1: 'Możesz wysłać go sobie mailem. Możesz schować na dysku.',
+      noteLine2: 'On poczeka. Tyle, ile trzeba.'
+    },
+    notYet: {
+      h1: 'Jeszcze nie',
+      whenPrefix: 'wróć '
+    },
+    opened: {
+      prefix: 'otworzone '
+    },
+    err: {
+      read: '(nie udało się odczytać)'
+    }
+  },
+  en: {
+    meta: {
+      htmlLang: 'en',
+      ogLocale: 'en_US',
+      dateLocale: 'en-US',
+      title: 'Between — a letter to your future self',
+      description: 'Write, seal. The file comes back to you on the day you pick. Nothing leaves this page.',
+      ogTitle: 'Between',
+      ogDescription: 'A letter to yourself. It only opens on the day you pick.'
+    },
+    ui: {
+      langAria: 'Language',
+      mark: 'between',
+      roomLeftLabel: 'płonę',
+      roomLeftAria: 'Płonę',
+      roomRightLabel: 'lighthouse',
+      roomRightAria: 'Lighthouse'
+    },
+    create: {
+      h1: 'Between',
+      sub: 'A letter to yourself. It only opens on the day you pick.',
+      welcome: "Write what you want to tell your future self. Nothing leaves this page — the file is made on your device and comes back to you when you say so.",
+      placeholder: 'Dear future me…',
+      whenLabel: 'Open on',
+      button: 'Seal it',
+      noteLine1: 'Nothing leaves this page. You download an .html file: its contents stay locked until the date you picked (the name starts with a dot so it sits low-key in Downloads).',
+      noteLine2: "Nobody can promise bank-level lockdown without a server — this is about a real, human pause, not a crypto war."
+    },
+    sealed: {
+      h1: 'Sealed',
+      sub: "It's on your side now. Until that date, just a countdown — no plain text inside the file.",
+      whenPrefix: 'opens on ',
+      noteLine1: "You can email it to yourself. You can stash it on a drive.",
+      noteLine2: "It'll wait. As long as it takes."
+    },
+    notYet: {
+      h1: 'Not yet',
+      whenPrefix: 'come back on '
+    },
+    opened: {
+      prefix: 'opened on '
+    },
+    err: {
+      read: "(couldn't read)"
+    }
+  },
+  es: {
+    meta: {
+      htmlLang: 'es',
+      ogLocale: 'es_ES',
+      dateLocale: 'es-ES',
+      title: 'Entremedio — una carta a tu yo del futuro',
+      description: 'Escribe, sella. El archivo te vuelve el día que tú elijas. Nada sale de esta página.',
+      ogTitle: 'Entremedio',
+      ogDescription: 'Una carta a ti. Solo se abre el día que tú elijas.'
+    },
+    ui: {
+      langAria: 'Idioma',
+      mark: 'entremedio',
+      roomLeftLabel: 'płonę',
+      roomLeftAria: 'Płonę',
+      roomRightLabel: 'faro',
+      roomRightAria: 'Faro'
+    },
+    create: {
+      h1: 'Entremedio',
+      sub: 'Una carta a ti. Solo se abre el día que tú elijas.',
+      welcome: 'Escribe lo que quieras decirte después. Nada sale de esta página — el archivo se crea en tu dispositivo y te vuelve cuando tú digas.',
+      placeholder: 'Querido yo del futuro…',
+      whenLabel: 'Abrir el día',
+      button: 'Sellar',
+      noteLine1: 'Nada sale de esta página. Descargas un archivo .html: el contenido queda cerrado hasta la fecha que elijas (el nombre empieza con un punto para no llamar la atención en Descargas).',
+      noteLine2: 'Nadie promete un blindaje bancario sin servidor — aquí va de una pausa humana de verdad, no una guerra cripto.'
+    },
+    sealed: {
+      h1: 'Sellado',
+      sub: 'Ahora está de tu lado. Hasta esa fecha, solo cuenta atrás — nada en texto claro dentro del archivo.',
+      whenPrefix: 'se abre el ',
+      noteLine1: 'Puedes mandártelo por mail. Puedes esconderlo en un disco.',
+      noteLine2: 'Esperará. Lo que haga falta.'
+    },
+    notYet: {
+      h1: 'Aún no',
+      whenPrefix: 'vuelve el '
+    },
+    opened: {
+      prefix: 'abierto el '
+    },
+    err: {
+      read: '(no se pudo leer)'
+    }
+  },
+  nl: {
+    meta: {
+      htmlLang: 'nl',
+      ogLocale: 'nl_NL',
+      dateLocale: 'nl-NL',
+      title: 'Tussen — een brief aan je toekomstige zelf',
+      description: 'Schrijf, verzegel. Het bestand komt naar je terug op de dag die jij kiest. Niets verlaat deze pagina.',
+      ogTitle: 'Tussen',
+      ogDescription: 'Een brief aan jezelf. Hij gaat pas open op de dag die jij kiest.'
+    },
+    ui: {
+      langAria: 'Taal',
+      mark: 'tussen',
+      roomLeftLabel: 'płonę',
+      roomLeftAria: 'Płonę',
+      roomRightLabel: 'vuurtoren',
+      roomRightAria: 'Vuurtoren'
+    },
+    create: {
+      h1: 'Tussen',
+      sub: 'Een brief aan jezelf. Hij gaat pas open op de dag die jij kiest.',
+      welcome: "Schrijf wat je tegen jezelf wil zeggen, later. Niets verlaat deze pagina — het bestand maak je op je eigen toestel en komt naar je terug als jij dat afspreekt.",
+      placeholder: 'Lieve toekomstige ik…',
+      whenLabel: 'Openen op',
+      button: 'Verzegel',
+      noteLine1: 'Niets verlaat deze pagina. Je downloadt een .html-bestand: de inhoud blijft gesloten tot de dag die jij hebt gekozen (de naam begint met een punt zodat het in Downloads niet meteen opvalt).',
+      noteLine2: 'Niemand belooft bank-niveau-vergrendeling zonder server — dit gaat om een echte, menselijke pauze, geen crypto-oorlog.'
+    },
+    sealed: {
+      h1: 'Verzegeld',
+      sub: 'Het ligt nu aan jouw kant. Tot die datum is het alleen aftellen — geen leesbare tekst in het bestand.',
+      whenPrefix: 'gaat open op ',
+      noteLine1: 'Je kunt het naar jezelf mailen. Je kunt het wegzetten op een schijf.',
+      noteLine2: 'Het wacht. Zo lang als nodig.'
+    },
+    notYet: {
+      h1: 'Nog niet',
+      whenPrefix: 'kom terug op '
+    },
+    opened: {
+      prefix: 'geopend op '
+    },
+    err: {
+      read: '(kon niet lezen)'
+    }
+  },
+  uk: {
+    meta: {
+      htmlLang: 'uk',
+      ogLocale: 'uk_UA',
+      dateLocale: 'uk-UA',
+      title: 'Між — лист собі в майбутнє',
+      description: 'Напиши, запечатай. Файл повертається до тебе у вибраний день. Нічого не виходить з цієї сторінки.',
+      ogTitle: 'Між',
+      ogDescription: 'Лист до себе. Відкриється лише у вибраний день.'
+    },
+    ui: {
+      langAria: 'Мова',
+      mark: 'між',
+      roomLeftLabel: 'płonę',
+      roomLeftAria: 'Płonę',
+      roomRightLabel: 'маяк',
+      roomRightAria: 'Маяк'
+    },
+    create: {
+      h1: 'Між',
+      sub: 'Лист до себе. Відкриється лише у вибраний день.',
+      welcome: 'Напиши, що хочеш сказати собі пізніше. Нічого не виходить з цієї сторінки — файл створюється в тебе і повертається до тебе тоді, коли ти скажеш.',
+      placeholder: 'Любий я з майбутнього…',
+      whenLabel: 'Відкрити',
+      button: 'Запечатати',
+      noteLine1: 'Нічого не виходить з цієї сторінки. Завантажуєш файл .html: вміст залишається закритим до обраної дати (імʼя починається з крапки, щоб у Завантаженнях не впадало в око).',
+      noteLine2: 'Ніхто без сервера не обіцяє блокування рівня банку — тут ідеться про справжню, людську паузу, а не криптовійну.'
+    },
+    sealed: {
+      h1: 'Запечатано',
+      sub: 'Тепер це на твоєму боці. До цієї дати — лише зворотний відлік, без відкритого тексту у файлі.',
+      whenPrefix: 'відкриється ',
+      noteLine1: 'Можеш надіслати його собі поштою. Можеш сховати на диску.',
+      noteLine2: 'Він почекає. Стільки, скільки треба.'
+    },
+    notYet: {
+      h1: 'Ще ні',
+      whenPrefix: 'повертайся '
+    },
+    opened: {
+      prefix: 'відкрито '
+    },
+    err: {
+      read: '(не вдалось прочитати)'
+    }
+  }
+};
+
+function detectLang() {
+  if (SEALED_LANG && LANG[SEALED_LANG]) return SEALED_LANG;
+  try {
+    const params = new URLSearchParams(location.search);
+    const fromUrl = params.get('lang');
+    if (fromUrl && LANG[fromUrl]) {
+      try { localStorage.setItem('plone_lang', fromUrl); } catch (e) {}
+      return fromUrl;
+    }
+    const stored = localStorage.getItem('plone_lang');
+    if (stored && LANG[stored]) return stored;
+  } catch (e) {}
+  return 'pl';
+}
+
+const ACTIVE = detectLang();
+const L = LANG[ACTIVE];
+
+function applyShell() {
+  document.documentElement.lang = L.meta.htmlLang;
+  document.title = L.meta.title;
+  const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el && val) el.setAttribute('content', val); };
+  setMeta('meta[name="description"]', L.meta.description);
+  setMeta('meta[property="og:title"]', L.meta.ogTitle);
+  setMeta('meta[property="og:description"]', L.meta.ogDescription);
+  setMeta('meta[property="og:locale"]', L.meta.ogLocale);
+  setMeta('meta[name="twitter:title"]', L.meta.ogTitle);
+  setMeta('meta[name="twitter:description"]', L.meta.ogDescription);
+
+  const left = document.getElementById('room-left');
+  if (left) {
+    left.textContent = L.ui.roomLeftLabel;
+    left.setAttribute('aria-label', L.ui.roomLeftAria);
+  }
+  const right = document.getElementById('room-right');
+  if (right) {
+    right.textContent = L.ui.roomRightLabel;
+    right.setAttribute('aria-label', L.ui.roomRightAria);
+  }
+  const bar = document.getElementById('langbar');
+  if (bar) bar.setAttribute('aria-label', L.ui.langAria);
+}
+
+function buildLangBar() {
+  const bar = document.getElementById('langbar');
+  if (!bar) return;
+  if (SEALED_LANG) {
+    /* opened sealed file: language is locked to the seal */
+    bar.style.display = 'none';
+    return;
+  }
+  const order = ['pl', 'en', 'es', 'nl', 'uk'];
+  bar.innerHTML = '';
+  order.forEach((code, idx) => {
+    if (idx > 0) {
+      const sep = document.createElement('span');
+      sep.className = 'sep';
+      sep.textContent = '·';
+      bar.appendChild(sep);
+    }
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = code;
+    b.setAttribute('aria-label', code.toUpperCase());
+    if (code === ACTIVE) b.classList.add('on');
+    b.addEventListener('click', () => {
+      if (code === ACTIVE) return;
+      try { localStorage.setItem('plone_lang', code); } catch (e) {}
+      const url = new URL(location.href);
+      url.searchParams.set('lang', code);
+      location.href = url.toString();
+    });
+    bar.appendChild(b);
+  });
+}
 
 function xorCipher(text, key) {
   let out = '';
@@ -281,26 +624,36 @@ function fromB64(s) { return decodeURIComponent(escape(atob(s))); }
 
 function fmtDate(iso) {
   const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString(L.meta.dateLocale, { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function renderCreate() {
   const root = document.getElementById('root');
+  const c = L.create;
   root.innerHTML = `
-    <h1>Pomiędzy</h1>
-    <p class="sub">List do siebie. Otworzy się dopiero w wybranym dniu.</p>
-    <p class="welcome">Napisz, co chcesz powiedzieć sobie później. Nic nie wychodzi z tej strony — plik powstaje u ciebie i wraca do ciebie wtedy, kiedy ustalisz.</p>
-    <textarea id="letter" placeholder="Drogi przyszły ja…"></textarea>
+    <h1></h1>
+    <p class="sub"></p>
+    <p class="welcome"></p>
+    <textarea id="letter"></textarea>
     <div class="row">
-      <label for="when">Otworzyć dnia</label>
+      <label for="when"></label>
       <input type="date" id="when" />
     </div>
-    <button id="seal">Zaplombuj</button>
+    <button id="seal" class="primary"></button>
     <p class="note">
-      Nic nie wychodzi z tej strony. Pobierzesz plik .html: treść w środku domyka się w wybranym dniu (nazwa zaczyna się kropką, żeby w Pobraniach mniej rzucał się w oczy).<br>
-      Pełnej blokady jak od banku płatności nie obiecuje nikt bez serwera — tu chodzi o skuteczną, ludzką pauzę, nie wojnę szyfrową.
+      <span class="n1"></span><br>
+      <span class="n2"></span>
     </p>
   `;
+  root.querySelector('h1').textContent = c.h1;
+  root.querySelector('.sub').textContent = c.sub;
+  root.querySelector('.welcome').textContent = c.welcome;
+  root.querySelector('#letter').placeholder = c.placeholder;
+  root.querySelector('label').textContent = c.whenLabel;
+  root.querySelector('#seal').textContent = c.button;
+  root.querySelector('.note .n1').textContent = c.noteLine1;
+  root.querySelector('.note .n2').textContent = c.noteLine2;
+
   const today = new Date();
   const inOneYear = new Date(today);
   inOneYear.setFullYear(today.getFullYear() + 1);
@@ -321,7 +674,7 @@ async function seal() {
 
   const cipher = toB64(xorCipher(text, xorKeyV2(when)));
   const payload = { v: 2, c: cipher, d: when, sealed_at: new Date().toISOString().slice(0, 10) };
-  const html = await currentSourceWithPayload(payload);
+  const html = await currentSourceWithPayload(payload, ACTIVE);
 
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
@@ -337,23 +690,35 @@ async function seal() {
   fx.classList.remove('on');
 
   const root = document.getElementById('root');
+  const s = L.sealed;
   root.innerHTML = `
-    <h1>Zaplombowane</h1>
-    <p class="sub">To po twojej stronie, do tej daty tylko odliczanie — bez treści w jasnym tekście w pliku.</p>
-    <div class="when">otworzy się ${fmtDate(when)}</div>
+    <h1></h1>
+    <p class="sub"></p>
+    <div class="when"></div>
     <p class="note">
-      Możesz wysłać go sobie mailem. Możesz schować na dysku.<br>
-      On poczeka. Tyle, ile trzeba.
+      <span class="n1"></span><br>
+      <span class="n2"></span>
     </p>
   `;
+  root.querySelector('h1').textContent = s.h1;
+  root.querySelector('.sub').textContent = s.sub;
+  root.querySelector('.when').textContent = s.whenPrefix + fmtDate(when);
+  root.querySelector('.note .n1').textContent = s.noteLine1;
+  root.querySelector('.note .n2').textContent = s.noteLine2;
 }
 
-async function currentSourceWithPayload(payload) {
+async function currentSourceWithPayload(payload, lang) {
   const json = JSON.stringify(payload).replace(/</g, '\\u003c');
-  return '<!doctype html>\n' + PRISTINE_SOURCE.replace(
+  const langJson = JSON.stringify(lang);
+  let src = PRISTINE_SOURCE.replace(
     'const SEALED_PAYLOAD = null;',
     'const SEALED_PAYLOAD = ' + json + ';'
   );
+  src = src.replace(
+    'const SEALED_LANG = null;',
+    'const SEALED_LANG = ' + langJson + ';'
+  );
+  return '<!doctype html>\n' + src;
 }
 
 function renderSealed(payload) {
@@ -362,14 +727,18 @@ function renderSealed(payload) {
   const open = new Date(payload.d + 'T00:00:00');
   const d0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   if (d0(today) < d0(open)) {
+    const ny = L.notYet;
     root.innerHTML = `
       <div class="sealed">
         <div class="glow"></div>
-        <h1>Jeszcze nie</h1>
-        <div class="when">wróć ${fmtDate(payload.d)}</div>
-        <div class="mark">pomiędzy</div>
+        <h1></h1>
+        <div class="when"></div>
+        <div class="mark"></div>
       </div>
     `;
+    root.querySelector('h1').textContent = ny.h1;
+    root.querySelector('.when').textContent = ny.whenPrefix + fmtDate(payload.d);
+    root.querySelector('.mark').textContent = L.ui.mark;
     return;
   }
 
@@ -377,15 +746,16 @@ function renderSealed(payload) {
   try {
     if (payload.v === 2 && payload.c) plain = xorCipher(fromB64(payload.c), xorKeyV2(payload.d));
     else if (payload.c) plain = xorCipher(fromB64(payload.c), payload.d);
-  } catch (e) { plain = '(nie udało się odczytać)'; }
+  } catch (e) { plain = L.err.read; }
 
   root.innerHTML = `
     <div class="sealed">
       <div class="glow"></div>
       <div class="letter" id="letter"></div>
-      <div class="mark">otworzone ${new Date().toLocaleDateString('pl-PL')}</div>
+      <div class="mark"></div>
     </div>
   `;
+  root.querySelector('.mark').textContent = L.opened.prefix + new Date().toLocaleDateString(L.meta.dateLocale);
   const el = document.getElementById('letter');
   let i = 0;
   const speed = 28;
@@ -395,6 +765,9 @@ function renderSealed(payload) {
   };
   setTimeout(tick, 1200);
 }
+
+applyShell();
+buildLangBar();
 
 if (SEALED_PAYLOAD) renderSealed(SEALED_PAYLOAD);
 else renderCreate();

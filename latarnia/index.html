@@ -2,13 +2,20 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="refresh" content="0;url=../" />
 <meta name="robots" content="noindex" />
 <title>Przekierowanie…</title>
 <link rel="canonical" href="https://thelanterndev.github.io/plone/" />
 </head>
 <body>
 <p>Strona główna to teraz <a href="../">Latarnia</a>.</p>
-<script>location.replace('../');</script>
+<script>
+(() => {
+  const search = location.search || '';
+  location.replace('../' + search);
+})();
+</script>
+<noscript>
+  <meta http-equiv="refresh" content="0;url=../" />
+</noscript>
 </body>
 </html>

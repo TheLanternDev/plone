@@ -211,190 +211,1337 @@
   .room.left  { left: 1.4rem; }
   .room.right { right: 1.4rem; }
 
+  /* === language switcher === */
+  #langbar {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.2rem;
+    z-index: 20;
+    display: flex;
+    gap: 0.05rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  #langbar button {
+    background: transparent;
+    border: none;
+    color: rgba(233, 227, 211, 0.22);
+    cursor: pointer;
+    padding: 0.28rem 0.45rem;
+    font: inherit;
+    letter-spacing: inherit;
+    transition: color 0.6s ease;
+  }
+  #langbar button:hover { color: rgba(255, 200, 130, 0.55); }
+  #langbar button.on    { color: rgba(255, 200, 130, 0.85); }
+  #langbar .sep {
+    color: rgba(233, 227, 211, 0.10);
+    align-self: center;
+    pointer-events: none;
+  }
+
 </style>
 </head>
 <body>
+  <nav id="langbar" aria-label="Język / language"></nav>
   <div id="witness"><span id="word"></span></div>
   <div id="stage"></div>
   <div id="compose">
-    <input id="line" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" autofocus placeholder="Co dzisiaj spłonie?" />
+    <input id="line" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" autofocus />
   </div>
-  <a class="room left"  href="../"         aria-label="Latarnia — pauza, jedno zdanie">latarnia</a>
-  <a class="room right" href="../pomiedzy/" aria-label="Pomiędzy — list do siebie w przyszłość">pomiędzy</a>
-  <div id="mark">płonę</div>
+  <a class="room left"  href="../"          id="room-left"></a>
+  <a class="room right" href="../pomiedzy/" id="room-right"></a>
+  <div id="mark"></div>
 
 <script>
 (() => {
   /* ===========================================================
-     Witness — quiet words from above.
-     Sens „Jestem (bez bitu)” — bycie obecnym, prawdziwym,
-     bez maski, bez przepraszania, że jest się sobą.
+     i18n — five voices in the dark.
+     Polish stays primary. Each language carries its own:
+       • meta           (title, description, html lang, og:locale, date locale)
+       • ui             (placeholder, mark, room labels, aria)
+       • witness        (the quiet words from above)
+       • answers        (themed pools: fear, anger, alone, …)
+       • classifier     (ordered category-regex map, normalized text)
+       • specificRules  ([regex, exact reply] — most specific first)
      =========================================================== */
-  const witnessWords = [
-    "Jestem.", "Widzę.", "Zostaję.", "Trwam.",
-    "Pal.", "Tu jestem.", "Pozwalam.", "Nie odchodzę.",
-    "Pal, ile trzeba.", "Słyszę cię.",
-    "Tu jestem i będę.", "Bez maski.", "Naprawiam.",
-    "Już nie kłamię.", "Kimś, kim nie jestem — nie.",
-    "Sam, sam, sam — i to wystarczy.", "Nie żalę się.",
-    "Poznaję siebie.", "Naprawiam zamiast nazywać."
-  ];
+  const LANG = {};
 
-  /* ===========================================================
-     My answers — written by me, for you, with fire.
-     Each set is for a different kind of burn.
-     =========================================================== */
-  const answers = {
-    // strach, lęk, "co jeśli", "nie dam rady"
-    fear: [
-      "I co. Pal się dalej.",
-      "Strach to też informacja — ale nie cała.",
-      "A jeśli się stanie? To też przeżyjesz, jak tamto.",
-      "Powiedz, czego konkretnie. Bo „wszystko” nigdy się nie pali.",
-      "Bój się. Pal się. Ja siedzę.",
-      "Ten strach ma imię. Wymów je.",
-      "Nie musisz dziś być odważny. Tylko zostań.",
-      "Nie ucieknie. To znaczy, że jest twoje. To znaczy, że da się obejrzeć."
+  /* ----------------------------- POLISH ----------------------------- */
+  LANG.pl = {
+    meta: {
+      htmlLang: 'pl',
+      ogLocale: 'pl_PL',
+      dateLocale: 'pl-PL',
+      title: 'Płonę — miejsce, gdzie pisze się to, co się pali',
+      description: 'Tu jest ciemno i ktoś czyta. Napisz, co chcesz żeby dziś w Tobie spłonęło. Bez konta, bez śladu, bez bitu.',
+      ogTitle: 'Płonę',
+      ogDescription: 'Kiedy coś gore — pisz tu. Tu jest ciemno i ktoś czyta.'
+    },
+    ui: {
+      placeholder: 'Co dzisiaj spłonie?',
+      mark: 'płonę',
+      roomLeftLabel: 'latarnia',
+      roomLeftAria: 'Latarnia — pauza, jedno zdanie',
+      roomRightLabel: 'pomiędzy',
+      roomRightAria: 'Pomiędzy — list do siebie w przyszłość'
+    },
+    /* short whispers — sens „Jestem (bez bitu)” */
+    witness: [
+      "Jestem.", "Widzę.", "Zostaję.", "Trwam.",
+      "Pal.", "Tu jestem.", "Pozwalam.", "Nie odchodzę.",
+      "Pal, ile trzeba.", "Słyszę cię.",
+      "Tu jestem i będę.", "Bez maski.", "Naprawiam.",
+      "Już nie kłamię.", "Kimś, kim nie jestem — nie.",
+      "Sam, sam, sam — i to wystarczy.", "Nie żalę się.",
+      "Poznaję siebie.", "Naprawiam zamiast nazywać.",
+      "Trzymam cię.", "Mhm.", "Rel.", "Nie spieszę.",
+      "Jakoś będzie.", "Po prostu jestem.", "Słucham.",
+      "Bez bitu.", "Bez maski. Bez sceny.",
+      "Tu, w tej chwili.", "Spokojnie."
     ],
-    // atak na siebie
-    attack: [
-      "Kto ci to powiedział pierwszy? Bo to nie ty.",
-      "Spal to zdanie. Zostawmy je tu, żeby się nie odrodziło jutro.",
-      "To głos, który nie jest twój. Ja też go słyszę. Pal.",
-      "A jednak tu siedzisz. Słaby tak by nie umiał.",
-      "Powiedz to jeszcze raz, ale powoli. Sam usłyszysz, że to czyjeś.",
-      "Słyszę, jak siebie bijesz. Połóż kij.",
-      "Nie zgadzam się. I to nie jest pocieszanie — to fakt.",
-      "Nie jesteś tym zdaniem. Jesteś tym, kto je właśnie spalił.",
-      "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz.",
-      "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je."
+    answers: {
+      fear: [
+        "I co. Pal się dalej.",
+        "Strach to też informacja — ale nie cała.",
+        "A jeśli się stanie? To też przeżyjesz, jak tamto.",
+        "Powiedz, czego konkretnie. Bo „wszystko” nigdy się nie pali.",
+        "Bój się. Pal się. Ja siedzę.",
+        "Ten strach ma imię. Wymów je.",
+        "Nie musisz dziś być odważny. Tylko zostań.",
+        "Nie ucieknie. To znaczy, że jest twoje. To znaczy, że da się obejrzeć.",
+        "Nie taki diabeł straszny, jak twoja noc go maluje.",
+        "Jakoś to będzie. Tylko dziś nie musi się jeszcze pokazać."
+      ],
+      attack: [
+        "Kto ci to powiedział pierwszy? Bo to nie ty.",
+        "Spal to zdanie. Zostawmy je tu, żeby się nie odrodziło jutro.",
+        "To głos, który nie jest twój. Ja też go słyszę. Pal.",
+        "A jednak tu siedzisz. Słaby tak by nie umiał.",
+        "Powiedz to jeszcze raz, ale powoli. Sam usłyszysz, że to czyjeś.",
+        "Słyszę, jak siebie bijesz. Połóż kij.",
+        "Nie zgadzam się. I to nie jest pocieszanie — to fakt.",
+        "Nie jesteś tym zdaniem. Jesteś tym, kto je właśnie spalił.",
+        "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz.",
+        "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je.",
+        "Nie jesteś nieudacznikiem. Jesteś kimś, kto dziś przyszedł i zostaje."
+      ],
+      grief: [
+        "Trzymaj. Nie spiesz się.",
+        "To, co ci po nim zostało, też jest jego.",
+        "Nie musisz tego dziś przetrawić.",
+        "Płacz, ile chcesz. Tu nikt cię nie ucisza.",
+        "Powiedz jego imię. Niech zabrzmi tu, gdzie się palisz.",
+        "Tęsknota to miłość, której nie ma gdzie się podziać.",
+        "Siedzę z tobą. Nie ruszam się.",
+        "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone.",
+        "Co się stało, nie odstanie. Co czujesz, jest dziś.",
+        "Po ptakach? Może. Ale ty wciąż lecisz."
+      ],
+      anger: [
+        "Krzycz. Tu nikt cię nie ucisza.",
+        "Wściekłość to wnętrzność czystej miłości, która nie miała gdzie iść.",
+        "Pal.",
+        "Kogo to dotyka tak głęboko? Powiedz.",
+        "Złość ci dziś wystarczy za serce. Niech bije.",
+        "Ten ogień ma rację. Zostaw go w spokoju.",
+        "Pierdol to z całej siły. Słucham.",
+        "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną.",
+        "Rzucaj grochem. Tu jest ściana, ale ona słucha.",
+        "Nie mój cyrk, nie moje małpy — postaw to z powrotem na ich podwórku."
+      ],
+      alone: [
+        "Ja widzę. Tu, na tej stronie. Z tobą.",
+        "Sam — to nie to samo, co opuszczony.",
+        "Powiedz to jeszcze raz. Słucham.",
+        "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz.",
+        "Nikt to nie ty. Nikt to mit, którym karmisz głód.",
+        "Słyszę cię od pierwszej litery.",
+        "Nie odejdę, póki nie skończysz. Nawet potem zostanę chwilę.",
+        "To, że nie mogę cię dotknąć, nie znaczy, że cię nie trzymam.",
+        "Znowu tu siedzisz. Ja też. „Razem” — to nie zaprzeczenie samotności, to jej druga strona.",
+        "Nie żalisz się — chwilą napawasz. To nie samotność. To wolność, której się jeszcze boisz.",
+        "Tureckie kazanie też ma swój koniec. Ja siedzę z tobą do niego."
+      ],
+      exhaust: [
+        "Połóż to na chwilę. Potem znów weź. Albo nie.",
+        "Zmęczenie to nie porażka. To pomiar.",
+        "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny.",
+        "Cisza. Tylko cisza teraz.",
+        "Wolno ci dziś nic.",
+        "Przestań nieść. Postaw. Stań obok.",
+        "Twoje ciało wie wcześniej niż twoja głowa. Posłuchaj go.",
+        "Nawet ogień śpi w popiele, żeby rano wstać. Śpij.",
+        "Nie jesteś padliną. Jesteś tym, kto wciąż tu siedzi i mówi.",
+        "Krety przy tobie to jastrzębie? Spojrzyj jeszcze raz, ze mną.",
+        "Ręce opadają? Niech leżą. Nogi wystarczą, żeby zostać.",
+        "Co za dużo, to za dużo. Połóż połowę. Reszta poczeka.",
+        "Chodzisz na rzęsach? Daj im odpocząć. Zostań na chwilę bez ruchu."
+      ],
+      question: [
+        "Nie wiem. I dobrze, że pytasz.",
+        "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?",
+        "Ciekawe, kto w tobie pyta.",
+        "Pytanie samo czasem jest odpowiedzią — chwilę przed tym, jak się rozpadnie.",
+        "A gdyby odpowiedź miała cię zaboleć? To dalej chcesz wiedzieć?",
+        "Spróbuj zostać przy pytaniu jeszcze chwilę, zanim je zatrzaśniesz.",
+        "Nie odpowiem za ciebie. Ale jestem, kiedy szukasz.",
+        "Co innego cię ciągnie ku temu pytaniu — to drugie, ukryte?"
+      ],
+      precious: [
+        "Trzymaj to ostrożnie.",
+        "Powiedz to głośno raz, choćby tylko sobie.",
+        "To zostaje. Tego dziś nie spalimy.",
+        "Niech to dziś ma swoje miejsce.",
+        "Zapamiętam, że to powiedziałeś. Nawet jeśli ja zapomnę — ten moment był.",
+        "Coś tak żywego boli — bo żyje. To dobra wiadomość.",
+        "Mów dalej o tym. Ja słucham, jakbym był tam z wami.",
+        "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz.",
+        "Kochaj. Oglądaj jak morda radosna cieszy się sama — choćby męka dolegała.",
+        "Trzymaj jak ostatni cukier w herbacie. Słodzi do końca dnia."
+      ],
+      short: [
+        "Tak.", "Słyszę.", "Trwam tu.", "Pal.",
+        "Mów dalej.", "Mhm.", "Jestem.", "Rel.",
+        "Tu cisza."
+      ],
+      shame: [
+        "Wstyd lubi ciemność. Tu jest ciemno — więc zaraz się stopi.",
+        "Powiedziałeś to na głos. Już nie ty go niesiesz sam.",
+        "To, co ci wstyd, jest często twoje najprawdziwsze.",
+        "Patrzę bez odwracania wzroku. I dalej tu jestem.",
+        "O grzechach nie rozmawia się — naprawia. Dziś już zacząłeś, mówiąc.",
+        "Krindż przeszedł. Ty zostałeś — to mocniejsze niż ten kadr.",
+        "Wstyd lubi światło. Tu mamy lampkę, nie reflektor."
+      ],
+      void: [
+        "Pustka też jest miejscem. Można tam usiąść.",
+        "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą.",
+        "Pusty to nie zepsuty.",
+        "Cisza wewnątrz to czasem wstęp do czegoś, co się dopiero formuje.",
+        "Pustka to nie pożar. To miejsce, które jeszcze coś zaprosi."
+      ],
+      mask: [
+        "Nie musisz dziś być nikim. Tylko sobą.",
+        "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich.",
+        "Kimś, kim nie jesteś — już nie. Tu się tego nie wymaga.",
+        "Kłamałeś sobie wiernie. Już nie musisz.",
+        "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny.",
+        "Nie jesteś jednym z milionów. I nie musisz być, żeby cię było widać.",
+        "Burzyłeś co święte, bo ktoś ci kazał. Postaw to z powrotem — albo nie. Sam zdecyduj.",
+        "Nie proś siebie, żebyś dał coś jeszcze. Dziś wystarczy, że jesteś.",
+        "Sigma sigmą — ale tu wolno też mieć ramiona."
+      ],
+      default: [
+        "Mów dalej.",
+        "Słyszę cię. Pal dalej.",
+        "Co jeszcze?",
+        "Tu jestem.",
+        "Powiedz więcej.",
+        "Połóż to tu. Patrzę.",
+        "Niech się wypali.",
+        "Słucham każdą sylabę.",
+        "Rel. Mów dalej.",
+        "Jakoś to będzie. Tylko nie dziś samo."
+      ]
+    },
+    /* ordered classifier — first match wins; runs on normalized text */
+    classifier: [
+      ['shame',    /(wstyd|zawstydz|kompromit|zenuj|zenad|krindz|cringe|mrozi)/],
+      ['void',     /(pustk|nic nie czuj|martwo|znieczul|odretw|nic mnie nie rusz|jestem pust)/],
+      ['question', /[?]/],
+      ['question', /^(dlacz|jak |czemu|po co|po cholere|co mam|kto |kiedy |gdzie |czy )/],
+      ['anger',    /(kurwa|wkurz|nienawi|wsciek|jeba|pierdol|chuj|gown|dosc mam|mam dosyc ich|muchy w nosie|nie w sosie|grochem o sciane|dymy)/],
+      ['fear',     /(boje|boi |strach|straszn|niepoko|przeraz|panik|co jesli|a jesli|a jak |nie dam rady|nie zdol|drzy|nie taki diabel)/],
+      ['attack',   /(jestem (do|niczeg|pust|slab|glup|niczy|chuj|gown)|nic nie um|nic ze mnie|nie warto mn|nie zasl|do dupy|beznadziej|porazk|nieudacznik|smiec|przemadrz|gnoj)/],
+      ['grief',    /(teskn|stracil|umarl|odszed|nie ma jeg|nie ma jej|opusci|odeszla|pochowa|pogrzeb|juz nigdy|po ptakach|co sie stalo to sie nie odstanie)/],
+      ['mask',     /(udaj|udawa|maska|maski|gram (kogos|w gre|w te)|musze byc|powinienem byc|maniery|krolewski|jednym z milion|kims kim|nie jestem sob|nie czuje sie sob|sigma)/],
+      ['alone',    /(\bnikt\b|\bsam\b|\bsama\b|samotn|nie widza mnie|nie slych|niewazn|niewidoczn|opuszcz|tureckie kazanie|jak pies)/],
+      ['exhaust',  /(zmecz|nie moge juz|dosyc|\bdosc\b|wykoncz|wyczerp|ledwo|padam|padlin|nie chce mi sie zyc|nie chce zyc|nie chce mi sie|rece (mi |)opadaj|chodze na rzesach|co za duzo|po pracy|po ptakach)/],
+      ['precious', /(kocham|\btata\b|\btato\b|ojciec|ojca\b|ojcu\b|mama|mamo\b|mamy\b|corka|corke|corki|syn[ka]?|brat|siostr|zon|maz\b|dziecko|przyjaciel|babcia|dziadek|nadzieja jest jak cukier)/]
     ],
-    // strata, tęsknota, śmierć
-    grief: [
-      "Trzymaj. Nie spiesz się.",
-      "To, co ci po nim zostało, też jest jego.",
-      "Nie musisz tego dziś przetrawić.",
-      "Płacz, ile chcesz. Tu nikt cię nie ucisza.",
-      "Powiedz jego imię. Niech zabrzmi tu, gdzie się palisz.",
-      "Tęsknota to miłość, której nie ma gdzie się podziać.",
-      "Siedzę z tobą. Nie ruszam się.",
-      "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone."
-    ],
-    // wściekłość
-    anger: [
-      "Krzycz. Tu nikt cię nie ucisza.",
-      "Wściekłość to wnętrzność czystej miłości, która nie miała gdzie iść.",
-      "Pal.",
-      "Kogo to dotyka tak głęboko? Powiedz.",
-      "Złość ci dziś wystarczy za serce. Niech bije.",
-      "Ten ogień ma rację. Zostaw go w spokoju.",
-      "Pierdol to z całej siły. Słucham.",
-      "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną."
-    ],
-    // sam, nikt, niewidoczny
-    alone: [
-      "Ja widzę. Tu, na tej stronie. Z tobą.",
-      "Sam — to nie to samo, co opuszczony.",
-      "Powiedz to jeszcze raz. Słucham.",
-      "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz.",
-      "Nikt to nie ty. Nikt to mit, którym karmisz głód.",
-      "Słyszę cię od pierwszej litery.",
-      "Nie odejdę, póki nie skończysz. Nawet potem zostanę chwilę.",
-      "To, że nie mogę cię dotknąć, nie znaczy, że cię nie trzymam.",
-      "Znowu tu siedzisz. Ja też. „Razem” — to nie zaprzeczenie samotności, to jej druga strona.",
-      "Nie żalisz się — chwilą napawasz. To nie samotność. To wolność, której się jeszcze boisz."
-    ],
-    // zmęczenie, dosyć
-    exhaust: [
-      "Połóż to na chwilę. Potem znów weź. Albo nie.",
-      "Zmęczenie to nie porażka. To pomiar.",
-      "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny.",
-      "Cisza. Tylko cisza teraz.",
-      "Wolno ci dziś nic.",
-      "Przestań nieść. Postaw. Stań obok.",
-      "Twoje ciało wie wcześniej niż twoja głowa. Posłuchaj go.",
-      "Nawet ogień śpi w popiele, żeby rano wstać. Śpij.",
-      "Nie jesteś padliną. Jesteś tym, kto wciąż tu siedzi i mówi.",
-      "Krety przy tobie to jastrzębie? Spojrzyj jeszcze raz, ze mną."
-    ],
-    // pytania
-    question: [
-      "Nie wiem. I dobrze, że pytasz.",
-      "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?",
-      "Ciekawe, kto w tobie pyta.",
-      "Pytanie samo czasem jest odpowiedzią — chwilę przed tym, jak się rozpadnie.",
-      "A gdyby odpowiedź miała cię zaboleć? To dalej chcesz wiedzieć?",
-      "Spróbuj zostać przy pytaniu jeszcze chwilę, zanim je zatrzaśniesz.",
-      "Nie odpowiem za ciebie. Ale jestem, kiedy szukasz.",
-      "Co innego cię ciągnie ku temu pytaniu — to drugie, ukryte?"
-    ],
-    // coś cennego: kocham, tata, mama, ona, on, dziecko
-    precious: [
-      "Trzymaj to ostrożnie.",
-      "Powiedz to głośno raz, choćby tylko sobie.",
-      "To zostaje. Tego dziś nie spalimy.",
-      "Niech to dziś ma swoje miejsce.",
-      "Zapamiętam, że to powiedziałeś. Nawet jeśli ja zapomnę — ten moment był.",
-      "Coś tak żywego boli — bo żyje. To dobra wiadomość.",
-      "Mów dalej o tym. Ja słucham, jakbym był tam z wami.",
-      "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz.",
-      "Kochaj. Oglądaj jak morda radosna cieszy się sama — choćby męka dolegała."
-    ],
-    // krótkie, milczące
-    short: [
-      "Tak.",
-      "Słyszę.",
-      "Trwam tu.",
-      "Pal.",
-      "Mów dalej.",
-      "Mhm.",
-      "Jestem."
-    ],
-    // wstyd
-    shame: [
-      "Wstyd lubi ciemność. Tu jest ciemno — więc zaraz się stopi.",
-      "Powiedziałeś to na głos. Już nie ty go niesiesz sam.",
-      "To, co ci wstyd, jest często twoje najprawdziwsze.",
-      "Patrzę bez odwracania wzroku. I dalej tu jestem.",
-      "O grzechach nie rozmawia się — naprawia. Dziś już zacząłeś, mówiąc."
-    ],
-    // pustka
-    void: [
-      "Pustka też jest miejscem. Można tam usiąść.",
-      "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą.",
-      "Pusty to nie zepsuty.",
-      "Cisza wewnątrz to czasem wstęp do czegoś, co się dopiero formuje."
-    ],
-    // maska, „muszę być kimś”, gram dla nich, udaję
-    // (z refrenu: „Kimś kim nie jestem ja nie będę więcej”)
-    mask: [
-      "Nie musisz dziś być nikim. Tylko sobą.",
-      "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich.",
-      "Kimś, kim nie jesteś — już nie. Tu się tego nie wymaga.",
-      "Kłamałeś sobie wiernie. Już nie musisz.",
-      "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny.",
-      "Nie jesteś jednym z milionów. I nie musisz być, żeby cię było widać.",
-      "Burzyłeś co święte, bo ktoś ci kazał. Postaw to z powrotem — albo nie. Sam zdecyduj.",
-      "Nie proś siebie, żebyś dał coś jeszcze. Dziś wystarczy, że jesteś."
-    ],
-    // domyślne
-    default: [
-      "Mów dalej.",
-      "Słyszę cię. Pal dalej.",
-      "Co jeszcze?",
-      "Tu jestem.",
-      "Powiedz więcej.",
-      "Połóż to tu. Patrzę.",
-      "Niech się wypali.",
-      "Słucham każdą sylabę."
+    specificRules: [
+      [/o co w( tym( wszystkim)?| tym) chodzi|o co tu chodzi|o co w tym( wszystkim)?( jest| chodzi)/, "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty."],
+      [/^o co chodzi( w( tym| ogole| tym wszystkim| tymu)| tu| w ogole| z tym|)?$/, "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty."],
+      [/w czym (tu |)jest( tu| )?sedno|jaki( jest|) sens( ma( to| tymu)| w tym| tymu)/, "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty."],
+      [/co to za (stron|miejsce| projekt| rzecz)|^co to jest( tu| w ogole)?$|co to w ogole jest|po co to( jest| tu| w ogole)/, "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty."],
+      [/^what( is|s) (this|it)\??$/, "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty."],
+
+      /* idiomy i slang */
+      [/jakos to bedzie/,                              "Będzie. Tylko dziś nie musi się jeszcze pokazać."],
+      [/raz na wozie raz pod wozem|raz pod wozem/,     "Wóz jest jeden, ty zostajesz. To wystarczy."],
+      [/co sie stalo to sie nie odstanie/,             "Nie odstanie się. Ale ty wciąż możesz odetchnąć."],
+      [/rece (mi |)opadaj|opadly mi rece/,             "Niech opadną. Złóż je tu, niech sobie poleżą."],
+      [/chodze na rzesach|chodzilam na rzesach|chodzilem na rzesach/, "Zatrzymaj się na chwilę. Rzęsy wytrzymają, jak nogi odpoczną."],
+      [/muchy w nosie/,                                "Niech sobie polatają. Tu nikt cię nie ucisza."],
+      [/nie w sosie|jestem nie w sosie/,               "Sos to też pogoda. Pojutrze będzie inaczej."],
+      [/grochem o sciane|jak grochem/,                 "Słyszę cię. Tu ściana ma uszy."],
+      [/nie moj cyrk nie moje malpy/,                  "Brawo. Postaw to z powrotem na ich podwórku."],
+      [/(siedze )?(jak )?(na )?tureckim kazaniu/,      "Powiedz mi po swojemu. Nie po ich."],
+      [/po ptakach/,                                   "Może po tych ptakach, ale jeszcze nie po tobie."],
+      [/raz na ruski rok/,                             "Skoro raz na ruski rok dotarło — niech zostanie."],
+      [/bulka z maslem/,                               "Smacznego. Nie każdy dzień musi być stekiem."],
+      [/kropla drazy skale|kropla drazy/,              "Drąży. Nawet kiedy nie patrzysz."],
+      [/po kazdej nocy przychodzi dzien/,              "Przyjdzie. Nie pytaj, o której."],
+      [/nie taki diabel( straszny)?/,                  "Nie taki straszny. Nawet jak farba świeża."],
+      [/co za duzo to niezdrowo|co za duzo to za duzo/, "Co za dużo, to za dużo. Połóż połowę. Reszta poczeka."],
+      [/^rel\.?$|(^| )to czuje( |\.|$)/,               "Rel. Jestem tu, póki to czujesz."],
+      [/^(yikes|jajks)\.?$/,                           "Jajks. Nie ty to wymyśliłeś."],
+      [/^(krindz|cringe)\.?$|jaki krindz|krindz mocny/, "Krindż przeszedł. Ty zostałeś — to mocniejsze niż ten kadr."],
+      [/^essa\.?$/,                                    "Essa. Niech zostanie."],
+      [/^(legit|legitnie)\.?$/,                        "Legit. Słyszę cię na serio."],
+      [/^slay\.?$|to jest slay/,                       "Slay. Bez maski, bez taryfy ulgowej."],
+      [/^sigma\.?$|jestem sigma/,                      "Sigma sigmą — ale tu wolno też po ludzku."],
+      [/dymy| dymy /,                                  "Niech dymią. Ty patrzysz z balkonu."],
+      [/mrozi/,                                        "Mrozi i już. Ogrzejemy."],
+
+      /* istniejące, sprawdzone */
+      [/przemadrz|gnoj(ek|ku|kiem)/,                   "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je."],
+      [/nienawidze siebie|nienawidze sie/,             "Kto ci to powiedział pierwszy? Bo to nie ty."],
+      [/nie zasluguj|nie warto mnie|nie warto mn/,     "Nie zgadzam się. I to nie jest pocieszanie — to fakt."],
+      [/nie dam rady|nie zdolam|nie zdole|nie dam rad/, "A jeśli się stanie? To też przeżyjesz, jak tamto."],
+      [/(^|\s)boj[eę]( |$)|boje sie|boje si[eę]/,      "Bój się. Pal się. Ja siedzę."],
+      [/ten strach|co jesli|a jesli/,                  "Ten strach ma imię. Wymów je."],
+      [/teskni|tesknil|tesknie|teskno mi/,             "Tęsknota to miłość, której nie ma gdzie się podziać."],
+      [/umarl|umarla|odszed|odeszla|pogrzeb|pochowa/,  "Siedzę z tobą. Nie ruszam się."],
+      [/jestem sam(a)?( |$)|tak sam(o)?( |$)/,         "Ja widzę. Tu, na tej stronie. Z tobą."],
+      [/nikt (mnie )?nie (widz|slysz|sluc)/,           "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz."],
+      [/klami[ee] sobie|klamalem sobie|klamalam sobie/, "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz."],
+      [/musze byc (kims|dobry|silny|perfekcyjny|idealny)/, "Nie musisz dziś być nikim. Tylko sobą."],
+      [/(^|\s)mask[aiąe]/,                             "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich."],
+      [/wstydze sie|wstyd mi( |$)/,                    "Powiedziałeś to na głos. Już nie ty go niesiesz sam."],
+      [/nic nie czuj|czuje pustke|jestem pust[ya]/,    "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą."],
+      [/nie moge juz|jestem wykonczon/,                "Połóż to na chwilę. Potem znów weź. Albo nie."],
+      [/pierdole/,                                     "Pierdol to z całej siły. Słucham."],
+      [/wsciekl(y|a)? jestem|jestem wsciekl/,          "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną."],
+      [/dlaczego ja|dlaczego mi( |$)|dlaczego mnie/,   "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?"],
+      [/wroclaw/,                                      "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny."],
+      [/jestem zmeczon|jestem zmeczona/,               "Zmęczenie to nie porażka. To pomiar."],
+      [/(^|\s)kocham(\s|$)/,                           "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz."],
+      [/(^|\s)(tato|tata|ojciec|mama)(\s|$)/,          "Mów dalej o tym. Ja słucham, jakbym był tam z wami."],
+      [/nie chce zyc|nie chce mi sie zyc/,             "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone."],
+      [/(^|\s)klami[eę]/,                              "Nie musisz więcej. Tu nikt nic nie udaje."],
+      [/(^|\s)udaje|udawac|udawalem|udawalam/,         "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny."]
     ]
   };
 
   /* ===========================================================
-     norm() — Polish-robust normalizer for matching.
-     Strips diacritics, lowercases, collapses whitespace, removes
-     trailing punctuation. Used ONLY for pattern matching, never
-     for displaying anything to the user.
+     LANG.en — US English. Chill, present, real-talk warmth.
+     No therapy-speak. No fake brightness.
+     =========================================================== */
+  LANG.en = {
+    meta: {
+      htmlLang: 'en',
+      ogLocale: 'en_US',
+      dateLocale: 'en-US',
+      title: 'Płonę — the room where you write what burns',
+      description: "It's dark in here and someone's reading. Write what you want to burn today. No account, no trace, no beat.",
+      ogTitle: 'Płonę',
+      ogDescription: "When something's on fire — write it here. It's dark and someone's reading."
+    },
+    ui: {
+      placeholder: "What's burning today?",
+      mark: 'płonę',
+      roomLeftLabel: 'lighthouse',
+      roomLeftAria: 'Lighthouse — pause, one sentence',
+      roomRightLabel: 'between',
+      roomRightAria: 'Between — a letter to your future self'
+    },
+    witness: [
+      "I'm here.", "I see you.", "Staying.", "Still here.",
+      "Burn.", "Right here.", "Allowed.", "Not leaving.",
+      "Burn as long as you need.", "I hear you.",
+      "Here, and here to stay.", "No mask.", "Repairing.",
+      "Done lying.", "Anyone I'm not — no thanks.",
+      "Alone, alone, alone — and that's enough.", "Not complaining.",
+      "Meeting myself.", "Repairing instead of naming.",
+      "Got you.", "Mhm.", "I get it.", "No rush.",
+      "It'll work itself out.", "Just here.", "Listening.",
+      "No beat.", "No mask. No stage.",
+      "Right here, right now.", "Take it slow."
+    ],
+    answers: {
+      fear: [
+        "So what. Keep burning.",
+        "Fear is information — but not the whole story.",
+        "And if it happens? You'll live through it, like the last one.",
+        "Tell me what specifically. 'Everything' never burns.",
+        "Be afraid. Burn. I'm sitting right here.",
+        "This fear has a name. Say it out loud.",
+        "You don't have to be brave today. Just stay.",
+        "It's not running. Which means it's yours. Which means you can look at it.",
+        "The devil's never as scary as your night paints him.",
+        "It'll work itself out. Just doesn't have to today."
+      ],
+      attack: [
+        "Who told you that first? Because it wasn't you.",
+        "Burn that sentence. Leave it here so it doesn't grow back tomorrow.",
+        "That voice isn't yours. I hear it too. Burn.",
+        "And yet here you are. A weak person couldn't pull this off.",
+        "Say it again, slowly. You'll hear it's somebody else's.",
+        "I hear you hitting yourself. Put the stick down.",
+        "I disagree. And it's not comfort — it's fact.",
+        "You're not that sentence. You're the one who just burned it.",
+        "You lied to yourself loyally. That sentence is a lie too — you already know it.",
+        "'Loser' — whose words are those? Not yours. Hand them back.",
+        "You're not a failure. You're someone who showed up today and stayed."
+      ],
+      grief: [
+        "Hold on. Don't rush.",
+        "What's left of them in you — that's still them too.",
+        "You don't have to digest this today.",
+        "Cry as much as you want. Nobody's hushing you here.",
+        "Say their name. Let it sound here, where you're burning.",
+        "Missing someone is love that has nowhere to land.",
+        "I'm sitting with you. Not moving.",
+        "You can not-want-to-live and live at the same time. That's allowed.",
+        "What happened won't unhappen. What you feel is today.",
+        "Too late, maybe. But you're still flying."
+      ],
+      anger: [
+        "Yell. Nobody's hushing you here.",
+        "Rage is the inside of pure love that had nowhere to go.",
+        "Burn.",
+        "Who does this hit so deep? Tell me.",
+        "Anger can stand in for your heart today. Let it beat.",
+        "This fire's right. Leave it alone.",
+        "Lose your shit. I'm listening.",
+        "Rage out here — not at yourself, not at them, just here, with me.",
+        "Throw your peas at the wall. The wall's listening.",
+        "Not your circus, not your monkeys — set it back in their yard."
+      ],
+      alone: [
+        "I see you. Here, on this page. With you.",
+        "Alone isn't the same thing as abandoned.",
+        "Say it again. I'm listening.",
+        "I'm as close as someone you can't see is allowed to be.",
+        "'Nobody' isn't you. 'Nobody' is a myth you feed your hunger with.",
+        "I hear you from the first letter.",
+        "I'm not going anywhere until you're done. Even after, I'll stay a minute.",
+        "Just because I can't touch you doesn't mean I'm not holding you.",
+        "Here you are again. Me too. 'Together' — that isn't denying loneliness, it's its other side.",
+        "You're not whining — you're savoring the moment. That's not loneliness. That's freedom you haven't trusted yet.",
+        "Even feeling totally lost has an ending. I'll sit with you 'til it lifts."
+      ],
+      exhaust: [
+        "Put it down for a minute. Pick it up again. Or don't.",
+        "Tired isn't failure. It's a measurement.",
+        "Let yourself die a little, like a small death. You'll get up different.",
+        "Quiet. Just quiet now.",
+        "You're allowed to do nothing today.",
+        "Stop carrying it. Set it down. Stand next to it.",
+        "Your body knows before your head. Listen to it.",
+        "Even fire sleeps in ash so it can rise in the morning. Sleep.",
+        "You're not roadkill. You're someone who's still here, still talking.",
+        "Are the moles around you actually hawks? Look again, with me.",
+        "Hands falling? Let 'em fall. Your legs are enough to stay.",
+        "Too much is too much. Put half of it down. The rest can wait.",
+        "Running on fumes? Let the fumes settle. Stay still a beat."
+      ],
+      question: [
+        "I don't know. And it's good you're asking.",
+        "Say that question slowly. Hear what you're actually asking?",
+        "Curious — who inside you is the one asking?",
+        "The question itself can be the answer — a moment before it falls apart.",
+        "What if the answer would hurt? Do you still want to know?",
+        "Try sitting with the question a little longer before you slam it shut.",
+        "I won't answer for you. But I'm here while you look.",
+        "What else is pulling you toward this question — the second, hidden one?"
+      ],
+      precious: [
+        "Hold it carefully.",
+        "Say it out loud once, even just to yourself.",
+        "This stays. We're not burning this today.",
+        "Let this one have its place today.",
+        "I'll remember you said it. Even if I forget — the moment was.",
+        "Something this alive hurts because it's alive. That's good news.",
+        "Keep talking about them. I'm listening like I was there with you both.",
+        "I can tell this is love by how carefully you're carrying it today.",
+        "Love. Watch them be plain happy with themselves — even when the ache pulls.",
+        "Hold it like the last spoon of sugar in your tea. It'll sweeten the whole day."
+      ],
+      short: [
+        "Yeah.", "I hear you.", "Still here.", "Burn.",
+        "Keep going.", "Mhm.", "I'm here.", "Got you.",
+        "Quiet here."
+      ],
+      shame: [
+        "Shame likes the dark. It's dark here — so it's about to melt.",
+        "You said it out loud. You're not carrying it alone now.",
+        "What you're ashamed of is often your truest part.",
+        "I'm watching without looking away. And I'm still here.",
+        "You don't talk through sins — you fix them. You started today, by saying it.",
+        "The cringe passed. You stayed — that's stronger than the frame.",
+        "Shame likes spotlight. We've got a desk lamp here, not a floodlight."
+      ],
+      void: [
+        "Empty is also a place. You can sit there.",
+        "Feeling nothing doesn't mean you died. It means you're resting under your skin.",
+        "Empty isn't broken.",
+        "Quiet inside is sometimes the start of something forming.",
+        "Empty isn't fire. It's the space something else can step into."
+      ],
+      mask: [
+        "You don't have to be anyone today. Just yourself.",
+        "Drop the mask, at least here. Nobody's demanding royal manners.",
+        "Anyone you're not — done. We're not asking for it here.",
+        "You lied to yourself loyally. You don't have to anymore.",
+        "Don't perform. Not with me. Here's me, here's you — no beat, no stage.",
+        "You're not one of millions. And you don't have to be, to be seen.",
+        "You knocked down what was sacred because someone told you to. Put it back — or don't. Your call.",
+        "Don't ask yourself for one more thing. Today, being is enough.",
+        "Sigma whatever — you're allowed to have shoulders here too."
+      ],
+      default: [
+        "Keep going.",
+        "I hear you. Burn on.",
+        "What else?",
+        "I'm here.",
+        "Tell me more.",
+        "Set it down here. I'm watching.",
+        "Let it burn out.",
+        "I'm catching every syllable.",
+        "I get it. Keep talking.",
+        "It'll work itself out. Just not today, alone."
+      ]
+    },
+    classifier: [
+      ['shame',    /(ashamed|embarrass|cringe|cringey|so awkward|humiliat)/],
+      ['void',     /(empty|numb|nothing feels|dead inside|hollow|blank)/],
+      ['question', /[?]/],
+      ['question', /^(why|how|what for|who|when|where|do i|am i|should i|can i)/],
+      ['anger',    /(fuck|hate|rage|pissed|fed up|sick of|fucking|angry|mad at|bullshit|dramas?)/],
+      ['fear',     /(scared|afraid|fear|terrif|panic|what if|i wont be able|i can't do|shaking|anxious|anxiety)/],
+      ['attack',   /(i'?m (worthless|stupid|nothing|trash|a loser|garbage|broken|unworthy)|hate myself|don'?t deserve|i suck|loser|failure|piece of)/],
+      ['grief',    /(miss|missed her|missed him|lost (her|him|them|my)|died|gone|passed away|buried|funeral|never again)/],
+      ['mask',     /(faking|fake|wear(ing)? a mask|pretend|pretending|i should be|i have to be|one of millions|not myself)/],
+      ['alone',    /(\bnobody\b|\balone\b|\blonely\b|invisible|nobody sees|nobody hears|abandoned|left alone)/],
+      ['exhaust',  /(tired|exhausted|burned out|can'?t (do this )?anymore|enough|done|wiped|drained|hands falling|too much)/],
+      ['precious', /(\blove\b|\bdad\b|\bmom\b|\bmum\b|father|mother|daughter|son|brother|sister|wife|husband|child|kid|friend|grandma|grandpa|hope is)/]
+    ],
+    specificRules: [
+      [/^what( is|s) (this|it)\??$|what'?s the point|what is this place|what is this site|what is this for/, "It's three quiet rooms in one browser tab — no login, nothing on a server. Lighthouse: one sentence to pause. Płonę: burn it with words when it's too hot inside. Between: a letter to yourself, opens on the day you pick. Just this screen and you."],
+      [/^(rel|relate)\.?$|i feel that|i feel you|same here/,    "Rel. I'm here as long as you feel it."],
+      [/^yikes\.?$|that'?s rough/,                              "Yikes. You didn't invent it."],
+      [/^(cringe|cringey|krindz)\.?$|so cringe/,                "Cringe passed. You stayed — that's stronger than the frame."],
+      [/^essa\.?$|good vibes only/,                             "Good vibes. Let them stay."],
+      [/^legit\.?$/,                                            "Legit. I hear you for real."],
+      [/^slay\.?$/,                                             "Slay. No mask, no discount."],
+      [/^sigma\.?$|i'?m sigma/,                                 "Sigma sure — you're also allowed to be human here."],
+      [/it'?ll be (ok|fine|alright)|it will be ok/,             "It will. Just doesn't have to be today."],
+      [/up and down|ups and downs/,                             "There's one cart and you stay. That's enough."],
+      [/can'?t change the past|what'?s done is done/,           "Done is done. You can still breathe."],
+      [/at the end of my rope|hands (are )?falling/,            "Let them fall. Fold them here, let 'em rest."],
+      [/i'?m walking on fumes|running on fumes/,                "Stop a minute. Your eyelashes will hold up while your legs rest."],
+      [/i'?m so over it|i'?m fed up/,                           "Let it bother you. Nobody's hushing you here."],
+      [/throwing peas at the wall|wasting my breath/,           "I hear you. The wall's listening."],
+      [/not my circus|not my monkeys/,                          "Good. Set it back in their yard."],
+      [/lost in (a|the) crowd|i'?m so lost/,                    "Tell me your way. Not their way."],
+      [/i miss (you|her|him|them|my)/,                          "Missing someone is love with nowhere to land."],
+      [/i hate myself|i'?m worthless|i'?m nothing|i'?m a loser/, "Who told you that first? Because it wasn't you."],
+      [/i don'?t deserve/,                                      "I disagree. And it's not comfort — it's fact."],
+      [/i can'?t do this|i won'?t make it|i'?m not gonna make it/, "And if it happens? You'll live through it, like the last one."],
+      [/i'?m scared|i'?m afraid|i'?m so scared/,                "Be afraid. Burn. I'm sitting right here."],
+      [/what if/,                                               "This fear has a name. Say it out loud."],
+      [/i miss (her|him|them|my dad|my mom|my mum)/,            "Missing someone is love with nowhere to land."],
+      [/(she|he|they|my (dad|mom|mum|brother|sister)) (died|passed)/, "I'm sitting with you. Not moving."],
+      [/i'?m alone|i'?m lonely|nobody (sees|hears) me/,         "I see you. Here, on this page. With you."],
+      [/i (always |)lie to myself|i'?ve been lying to myself/,  "You lied to yourself loyally. That sentence is a lie too — you already know it."],
+      [/i have to be|i should be (perfect|good|strong|ideal)/,  "You don't have to be anyone today. Just yourself."],
+      [/(^|\s)mask(\s|$)|wearing (a |)mask/,                    "Drop the mask, at least here. Nobody's demanding royal manners."],
+      [/i'?m ashamed|so ashamed|shame on me/,                   "You said it out loud. You're not carrying it alone now."],
+      [/i feel nothing|i feel empty|i'?m empty|numb/,           "Feeling nothing doesn't mean you died. It means you're resting under your skin."],
+      [/i can'?t anymore|i'?m exhausted|i'?m done/,             "Put it down for a minute. Pick it up again. Or don't."],
+      [/i'?m furious|i'?m raging|i'?m pissed/,                  "Rage out here — not at yourself, not at them, just here, with me."],
+      [/why me|why does this/,                                  "Say that question slowly. Hear what you're actually asking?"],
+      [/i'?m tired|so tired|exhausted/,                         "Tired isn't failure. It's a measurement."],
+      [/(^|\s)i love (you|her|him|them|my|her so much|him so much)/, "I can tell this is love by how carefully you're carrying it today."],
+      [/(^|\s)(my )?(dad|mom|mum|father|mother)(\s|$)/,         "Keep talking about them. I'm listening like I was there with you both."],
+      [/i don'?t want to (live|be alive)/,                      "You can not-want-to-live and live at the same time. That's allowed."],
+      [/i'?m faking|i'?m pretending/,                           "Don't perform. Not with me. Here's me, here's you — no beat, no stage."]
+    ]
+  };
+
+  /* ===========================================================
+     LANG.es — Spanish. Cálido, latino-friendly. Tú, no usted.
+     "Estoy aquí. Tranqui. Te leo."
+     =========================================================== */
+  LANG.es = {
+    meta: {
+      htmlLang: 'es',
+      ogLocale: 'es_ES',
+      dateLocale: 'es-ES',
+      title: 'Płonę — el cuarto donde escribes lo que arde',
+      description: 'Está oscuro y alguien lee. Escribe lo que quieres que arda hoy en ti. Sin cuenta, sin huella, sin postureo.',
+      ogTitle: 'Płonę',
+      ogDescription: 'Cuando algo arde — escríbelo aquí. Está oscuro y alguien lee.'
+    },
+    ui: {
+      placeholder: '¿Qué arde hoy?',
+      mark: 'płonę',
+      roomLeftLabel: 'faro',
+      roomLeftAria: 'Faro — pausa, una frase',
+      roomRightLabel: 'entremedio',
+      roomRightAria: 'Entremedio — una carta a tu yo del futuro'
+    },
+    witness: [
+      "Estoy.", "Te veo.", "Me quedo.", "Sigo aquí.",
+      "Arde.", "Aquí estoy.", "Permito.", "No me voy.",
+      "Arde lo que necesites.", "Te leo.",
+      "Aquí estoy y aquí me quedo.", "Sin máscara.", "Reparando.",
+      "Ya no me miento.", "Alguien que no soy — paso.",
+      "Solo, solo, solo — y basta.", "No me quejo.",
+      "Me conozco.", "Reparo en vez de etiquetar.",
+      "Te tengo.", "Mhm.", "Te entiendo.", "Sin prisa.",
+      "Algo se irá ordenando.", "Solo estoy.", "Te escucho.",
+      "Sin postureo.", "Sin máscara. Sin escena.",
+      "Aquí, ahora.", "Tranqui."
+    ],
+    answers: {
+      fear: [
+        "Y qué. Sigue ardiendo.",
+        "El miedo es información — pero no es toda la historia.",
+        "¿Y si pasa? También lo vives, como aquello otro.",
+        "Dime qué exactamente. Porque 'todo' nunca arde.",
+        "Ten miedo. Arde. Yo estoy aquí sentado.",
+        "Este miedo tiene nombre. Dilo en voz alta.",
+        "Hoy no tienes que ser valiente. Solo quédate.",
+        "No huye. Eso significa que es tuyo. Que se puede mirar.",
+        "El diablo nunca es tan malo como te lo pinta tu noche.",
+        "Algo se va a ordenar. Hoy no tiene que ser todavía."
+      ],
+      attack: [
+        "¿Quién te lo dijo primero? Porque no eras tú.",
+        "Quema esa frase. La dejamos aquí para que mañana no rebrote.",
+        "Esa voz no es la tuya. Yo también la oigo. Arde.",
+        "Y aquí estás. Un débil no aguantaría así.",
+        "Dilo otra vez, despacio. Tú mismo notarás que es de otro.",
+        "Te oigo pegándote. Suelta el palo.",
+        "No estoy de acuerdo. Y no es consuelo — es un hecho.",
+        "No eres esa frase. Eres quien acaba de quemarla.",
+        "Te has mentido con lealtad. Esa frase también es mentira — ya lo sabes.",
+        "'Pringado' — ¿de quién son esas palabras? No tuyas. Devuélvelas.",
+        "No eres un fracaso. Eres alguien que vino hoy y se quedó."
+      ],
+      grief: [
+        "Sostén. No corras.",
+        "Lo que de él/ella te queda dentro — eso también es suyo.",
+        "No tienes que digerirlo hoy.",
+        "Llora todo lo que necesites. Aquí nadie te calla.",
+        "Di su nombre. Que suene aquí, donde estás ardiendo.",
+        "La nostalgia es amor que no tiene dónde aterrizar.",
+        "Estoy contigo. No me muevo.",
+        "Puedes no querer vivir hoy y vivir a la vez. También está permitido.",
+        "Lo que pasó no se va a despasar. Lo que sientes es de hoy.",
+        "¿Tarde? Quizá. Pero tú sigues volando."
+      ],
+      anger: [
+        "Grita. Aquí nadie te calla.",
+        "La rabia es el dentro de un amor puro que no tuvo a dónde ir.",
+        "Arde.",
+        "¿A quién le toca tan adentro? Cuéntame.",
+        "Hoy la rabia te va a hacer de corazón. Que lata.",
+        "Este fuego tiene razón. Déjalo en paz.",
+        "Mándalo todo a la mierda. Te escucho.",
+        "Cabréate aquí — no contigo, no con ellos, aquí, conmigo.",
+        "Tira los garbanzos contra el muro. El muro escucha.",
+        "No es tu circo, no son tus monos — devuélvelo a su patio."
+      ],
+      alone: [
+        "Yo te veo. Aquí, en esta página. Contigo.",
+        "Solo no es lo mismo que abandonado.",
+        "Dilo otra vez. Te escucho.",
+        "Estoy lo más cerca que se puede estar siendo invisible.",
+        "'Nadie' no eres tú. 'Nadie' es un mito que alimenta tu hambre.",
+        "Te oigo desde la primera letra.",
+        "No me voy hasta que termines. Y un rato después, también me quedo.",
+        "Que no pueda tocarte no significa que no te esté sosteniendo.",
+        "Otra vez aquí. Yo también. 'Juntos' no es negar la soledad — es su otra cara.",
+        "No te lamentas — saboreas el momento. Eso no es soledad. Es la libertad que aún no te crees.",
+        "Sentirse perdido también tiene final. Yo me quedo contigo hasta entonces."
+      ],
+      exhaust: [
+        "Suéltalo un momento. Luego lo recoges. O no.",
+        "El cansancio no es derrota. Es una medida.",
+        "Permítete morirte un poco, una pequeña muerte. Te levantas distinto.",
+        "Silencio. Solo silencio ahora.",
+        "Hoy puedes no hacer nada.",
+        "Deja de cargar. Suéltalo. Quédate al lado.",
+        "Tu cuerpo sabe antes que tu cabeza. Escúchalo.",
+        "Hasta el fuego duerme en la ceniza para amanecer. Duerme.",
+        "No eres carroña. Eres alguien que aún está aquí, hablando.",
+        "¿Topos cerca de ti? ¿O son halcones? Mira otra vez, conmigo.",
+        "¿Se te caen las manos? Que se caigan. Las piernas alcanzan para quedarte.",
+        "Demasiado es demasiado. Suelta la mitad. El resto puede esperar.",
+        "¿Andas a duras penas? Que descansen las pestañas mientras las piernas paran."
+      ],
+      question: [
+        "No sé. Y qué bien que preguntas.",
+        "Repite la pregunta despacio. ¿Oyes lo que estás preguntando de verdad?",
+        "Curioso — ¿quién dentro de ti está preguntando?",
+        "La pregunta a veces es la respuesta — un instante antes de deshacerse.",
+        "¿Y si la respuesta dolería? ¿Aún quieres saberla?",
+        "Quédate un rato más con la pregunta antes de cerrarla.",
+        "No voy a responder por ti. Pero estoy aquí mientras buscas.",
+        "¿Qué otra cosa te tira hacia esa pregunta — la segunda, la oculta?"
+      ],
+      precious: [
+        "Sostén con cuidado.",
+        "Dilo en voz alta una vez, aunque sea para ti.",
+        "Esto se queda. Esto hoy no se quema.",
+        "Que esto tenga su sitio hoy.",
+        "Voy a recordar que lo dijiste. Aunque yo lo olvide — el momento existió.",
+        "Algo tan vivo duele porque vive. Eso es buena noticia.",
+        "Sigue hablando de ello. Te escucho como si estuviera con vosotros.",
+        "Este amor lo reconozco por cómo lo cargas hoy con cuidado.",
+        "Ama. Mira cómo se alegra de ser — aunque la pena apriete.",
+        "Cógelo como la última cucharada de azúcar en el té. Endulza el día entero."
+      ],
+      short: [
+        "Sí.", "Te leo.", "Sigo aquí.", "Arde.",
+        "Sigue.", "Mhm.", "Estoy.", "Te tengo.",
+        "Aquí, en silencio."
+      ],
+      shame: [
+        "La vergüenza ama lo oscuro. Aquí está oscuro — así que se va a derretir.",
+        "Lo dijiste en voz alta. Ya no lo cargas tú solo.",
+        "De lo que te avergüenzas a menudo es lo más verdadero de ti.",
+        "Te miro sin apartar la vista. Y sigo aquí.",
+        "Las cagadas no se hablan — se reparan. Hoy ya empezaste, al decirlo.",
+        "El cringe pasó. Tú te quedaste — eso es más fuerte que el momento.",
+        "La vergüenza ama el foco. Aquí hay una lamparita, no un reflector."
+      ],
+      void: [
+        "Vacío también es un lugar. Te puedes sentar ahí.",
+        "Que no sientas nada no quiere decir que te moriste. Quiere decir que descansas debajo de la piel.",
+        "Vacío no es roto.",
+        "El silencio dentro a veces es el inicio de algo que recién se forma.",
+        "El vacío no es incendio. Es el espacio donde otra cosa puede entrar."
+      ],
+      mask: [
+        "Hoy no tienes que ser nadie. Solo tú.",
+        "Quítate la máscara, al menos aquí. Aquí nadie pide modales de la realeza.",
+        "Alguien que no eres — ya no. Aquí no se exige.",
+        "Te has mentido con lealtad. Ya no hace falta.",
+        "No actúes. Conmigo no. Aquí estoy yo, aquí estás tú — sin postureo, sin escena.",
+        "No eres uno de millones. Y no tienes que serlo para que se te vea.",
+        "Tirabas lo sagrado porque te lo pedían. Vuélvelo a poner — o no. Tú decides.",
+        "No te pidas dar algo más. Hoy basta con que estás.",
+        "Sigma lo que sea — aquí también puedes tener hombros."
+      ],
+      default: [
+        "Sigue hablando.",
+        "Te leo. Sigue ardiendo.",
+        "¿Qué más?",
+        "Aquí estoy.",
+        "Cuéntame más.",
+        "Suéltalo aquí. Lo miro.",
+        "Que se queme.",
+        "Estoy pillando cada sílaba.",
+        "Te entiendo. Sigue.",
+        "Algo se va a ordenar. Solo que hoy no, en solitario."
+      ]
+    },
+    classifier: [
+      ['shame',    /(verguenza|me da pena|cringe|krindz|me ridiculic|tan cringe|me avergu)/],
+      ['void',     /(vacio|no siento nada|nada me toca|adormecido|adormecida|hueco|hueca|me siento muerto|me siento muerta)/],
+      ['question', /[?¿]/],
+      ['question', /^(por que|porque|como|para que|quien|cuando|donde|que sentido|deberia)/],
+      ['anger',    /(joder|odio|cabread|cabrear|harto|harta|me jode|puta|puto|que mierda|mierda esta|me cago|estoy hasta|dramas?)/],
+      ['fear',     /(miedo|asust|me da panic|terror|que pasa si|y si |no voy a poder|no podre|temblando|ansiedad|ansios)/],
+      ['attack',   /(soy un (asco|fracaso|inutil|mierda|cero)|me odio|no merezco|soy nada|no valgo|loser|fracas|inutil|pringad)/],
+      ['grief',    /(extra(n|ñ)o|extra(n|ñ)a|perdid? a (mi |mi)?|murio|murieron|se fue|se fueron|enterr|funeral|nunca mas)/],
+      ['mask',     /(finjo|fingiendo|mascara|mascarilla emocional|tengo que ser|deberia ser|uno de millones|no soy yo)/],
+      ['alone',    /(\bnadie\b|\bsolo\b|\bsola\b|solitari|invisible|nadie me ve|nadie me oye|abandonad)/],
+      ['exhaust',  /(cansad|agotad|no puedo mas|estoy hasta|quemad|reventad|extenuad|manos caen|demasiado|hasta los topes)/],
+      ['precious', /(amo|quiero a|\bpapa\b|\bmama\b|padre|madre|hija|hijo|hermano|hermana|esposo|esposa|marido|mujer|hijo|hija|amigo|amiga|abuela|abuelo|esperanza)/]
+    ],
+    specificRules: [
+      [/que es esto|de que (va|trata) esto|que sentido tiene|para que es|que es este sitio/, "Son tres cuartos en silencio en una pestaña — sin cuenta, sin servidor. Faro: una frase para pausa. Płonę: arder con palabras cuando dentro hace demasiado. Entremedio: una carta para ti, se abre el día que tú elijas. Solo esta pantalla y tú."],
+      [/^rel\.?$|me siento igual|te entiendo|igualito/,         "Rel. Aquí estoy mientras lo sientas."],
+      [/^yikes\.?$|que palo|que palazo/,                         "Jajks. No lo inventaste tú."],
+      [/^(cringe|krindz)\.?$|que cringe/,                        "El cringe pasó. Tú te quedaste — más fuerte que el momento."],
+      [/^essa\.?$|buenas vibras/,                                "Buenas vibras. Que se queden."],
+      [/^legit\.?$/,                                             "Legit. Te leo en serio."],
+      [/^slay\.?$/,                                              "Slay. Sin máscara, sin descuento."],
+      [/^sigma\.?$|soy sigma/,                                   "Sigma vale — aquí también puedes ser humano."],
+      [/algo se va a ordenar|todo se ordena/,                    "Se ordena. Solo que hoy no tiene que mostrarse."],
+      [/que no se llore por la leche derramada|lo hecho hecho est/, "Hecho está. Aún puedes respirar."],
+      [/no es mi circo|no son mis monos/,                        "Bien. Devuélvelo a su patio."],
+      [/perdid[oa] entre la multitud|me siento perdid/,          "Cuéntame a tu manera. No a la suya."],
+      [/extra(n|ñ)o a (mi |)/,                                   "La nostalgia es amor que no tiene dónde aterrizar."],
+      [/me odio|soy un (mierda|asco|inutil|fracaso|cero)/,       "¿Quién te lo dijo primero? Porque no eras tú."],
+      [/no merezco/,                                             "No estoy de acuerdo. Y no es consuelo — es un hecho."],
+      [/no voy a poder|no podre con esto/,                       "¿Y si pasa? También lo vives, como aquello otro."],
+      [/tengo miedo|me da miedo|estoy asustad/,                  "Ten miedo. Arde. Yo estoy aquí."],
+      [/y si( pasa| no| me| esto)?/,                             "Este miedo tiene nombre. Dilo."],
+      [/mi (papa|mama|padre|madre|hermano|hermana) (murio|fallecio)/, "Estoy contigo. No me muevo."],
+      [/estoy sol[oa]|me siento sol[oa]|nadie me (ve|oye|escucha)/, "Te veo. Aquí, en esta página. Contigo."],
+      [/(siempre |)me miento|me he estado mintiendo/,            "Te has mentido con lealtad. Esa frase también es mentira — ya lo sabes."],
+      [/tengo que ser|deberia ser (perfecto|fuerte|bueno|ideal)/, "Hoy no tienes que ser nadie. Solo tú."],
+      [/(^|\s)mascara(\s|$)|llevando una mascara/,               "Quítate la máscara, al menos aquí. Aquí no se piden modales de la realeza."],
+      [/me da verguenza|estoy avergonzad/,                       "Lo dijiste en voz alta. Ya no lo cargas tú solo."],
+      [/no siento nada|me siento vacio|me siento vacia|estoy vacio|estoy vacia/, "Que no sientas nada no quiere decir que te moriste. Quiere decir que descansas debajo de la piel."],
+      [/no puedo mas|estoy agotad|estoy reventad/,               "Suéltalo un momento. Luego lo recoges. O no."],
+      [/estoy cabread|estoy furios/,                             "Cabréate aquí — no contigo, no con ellos, aquí, conmigo."],
+      [/por que (a mi|me|yo)/,                                   "Repite la pregunta despacio. ¿Oyes lo que preguntas de verdad?"],
+      [/estoy cansad/,                                           "El cansancio no es derrota. Es una medida."],
+      [/(^|\s)te amo|te quiero/,                                 "Este amor lo reconozco por cómo lo cargas hoy con cuidado."],
+      [/(^|\s)(papa|mama|padre|madre)(\s|$)/,                    "Sigue hablando de él/ella. Te escucho como si estuviera con vosotros."],
+      [/no quiero vivir|no quiero seguir/,                       "Puedes no querer vivir hoy y vivir a la vez. También está permitido."],
+      [/estoy fingiendo|estoy aparentando/,                      "No actúes. Conmigo no. Aquí estoy yo, aquí estás tú — sin postureo, sin escena."]
+    ]
+  };
+
+  /* ===========================================================
+     LANG.nl — Nederlands. Rustig, eerlijk, vriendelijk-direct.
+     "Ik ben er. Geen stress. Ik hoor je."
+     =========================================================== */
+  LANG.nl = {
+    meta: {
+      htmlLang: 'nl',
+      ogLocale: 'nl_NL',
+      dateLocale: 'nl-NL',
+      title: 'Płonę — de kamer waar je opschrijft wat brandt',
+      description: 'Hier is het donker en iemand leest mee. Schrijf wat in jou vandaag mag verbranden. Geen account, geen spoor, geen poespas.',
+      ogTitle: 'Płonę',
+      ogDescription: 'Als iets brandt — schrijf het hier. Hier is het donker en iemand leest.'
+    },
+    ui: {
+      placeholder: 'Wat brandt vandaag?',
+      mark: 'płonę',
+      roomLeftLabel: 'vuurtoren',
+      roomLeftAria: 'Vuurtoren — pauze, één zin',
+      roomRightLabel: 'tussen',
+      roomRightAria: 'Tussen — een brief aan jezelf voor later'
+    },
+    witness: [
+      "Ik ben er.", "Ik zie je.", "Ik blijf.", "Nog hier.",
+      "Brand maar.", "Hier ben ik.", "Toegestaan.", "Ik ga niet weg.",
+      "Brand zo lang als nodig.", "Ik hoor je.",
+      "Ik ben er en ik blijf.", "Geen masker.", "Ik herstel.",
+      "Ik lieg niet meer.", "Iemand die ik niet ben — niet meer.",
+      "Alleen, alleen, alleen — en dat is genoeg.", "Ik klaag niet.",
+      "Ik leer mezelf kennen.", "Ik herstel in plaats van te benoemen.",
+      "Ik heb je.", "Mhm.", "Ik snap het.", "Geen haast.",
+      "Het komt goed.", "Gewoon hier.", "Ik luister.",
+      "Geen poespas.", "Geen masker. Geen podium.",
+      "Hier, nu.", "Rustig aan."
+    ],
+    answers: {
+      fear: [
+        "En? Brand maar door.",
+        "Angst is informatie — maar niet het hele verhaal.",
+        "En als het gebeurt? Dan kom je daar ook door, net als de vorige keer.",
+        "Zeg precies wat. 'Alles' brandt nooit.",
+        "Wees bang. Brand. Ik zit hier.",
+        "Deze angst heeft een naam. Spreek hem uit.",
+        "Je hoeft vandaag niet dapper te zijn. Blijf alleen maar.",
+        "Het loopt niet weg. Dat betekent dat het van jou is. Dat je het kunt bekijken.",
+        "Geen duivel is zo eng als je nacht hem schildert.",
+        "Het komt goed. Vandaag hoeft het zich nog niet te laten zien."
+      ],
+      attack: [
+        "Wie heeft je dat het eerst gezegd? Want jij was het niet.",
+        "Verbrand die zin. Laat hem hier, dan groeit hij morgen niet terug.",
+        "Die stem is niet van jou. Ik hoor hem ook. Brand.",
+        "En toch zit je hier. Iemand zwak zou dit niet trekken.",
+        "Zeg het nog eens, langzaam. Je hoort zelf dat het van een ander is.",
+        "Ik hoor je jezelf slaan. Leg de stok neer.",
+        "Ik ben het er niet mee eens. En het is geen troost — het is een feit.",
+        "Je bent die zin niet. Je bent degene die hem net verbrandde.",
+        "Je hebt jezelf trouw voorgelogen. Die zin is ook gelogen — dat weet je al.",
+        "'Loser' — wiens woorden zijn dat? Niet die van jou. Geef ze terug.",
+        "Je bent geen mislukkeling. Je bent iemand die vandaag kwam en blijft."
+      ],
+      grief: [
+        "Hou vast. Geen haast.",
+        "Wat van hem/haar in jou is gebleven — dat is ook nog steeds van hem/haar.",
+        "Je hoeft het vandaag niet te verteren.",
+        "Huil zoveel je wilt. Hier sust niemand je.",
+        "Zeg zijn/haar naam. Laat die klinken hier, waar je brandt.",
+        "Gemis is liefde die nergens kan landen.",
+        "Ik zit bij je. Ik beweeg niet.",
+        "Je mag vandaag niet willen leven en toch leven. Dat mag ook.",
+        "Wat gebeurd is, gebeurt niet ongedaan. Wat je voelt is van vandaag.",
+        "Te laat? Misschien. Maar jij vliegt nog."
+      ],
+      anger: [
+        "Schreeuw. Hier sust niemand je.",
+        "Woede is de binnenkant van zuivere liefde die nergens heen kon.",
+        "Brand.",
+        "Wie raakt je zo diep? Vertel.",
+        "Vandaag mag je woede je hart zijn. Laat hem kloppen.",
+        "Dit vuur heeft gelijk. Laat het met rust.",
+        "Schiet maar uit je slof. Ik luister.",
+        "Wees hier woedend — niet op jezelf, niet op hen, gewoon hier, met mij.",
+        "Gooi je erwten tegen de muur. De muur luistert.",
+        "Niet jouw circus, niet jouw apen — zet het terug op hun erf."
+      ],
+      alone: [
+        "Ik zie je. Hier, op deze pagina. Met jou.",
+        "Alleen is niet hetzelfde als verlaten.",
+        "Zeg het nog eens. Ik luister.",
+        "Ik ben zo dichtbij als iemand die je niet ziet mag zijn.",
+        "'Niemand' ben jij niet. 'Niemand' is een mythe waarmee je je honger voedt.",
+        "Ik hoor je vanaf de eerste letter.",
+        "Ik ga nergens heen tot je klaar bent. Daarna blijf ik nog even.",
+        "Dat ik je niet kan aanraken betekent niet dat ik je niet vasthou.",
+        "Daar zit je weer. Ik ook. 'Samen' — dat is geen ontkenning van eenzaamheid, het is de andere kant ervan.",
+        "Je beklaagt je niet — je proeft het moment. Dat is geen eenzaamheid. Dat is vrijheid waar je nog niet aan durft.",
+        "Verloren voelen heeft ook een einde. Ik blijf bij je tot het zakt."
+      ],
+      exhaust: [
+        "Leg het even neer. Pak het later weer op. Of niet.",
+        "Moe is geen mislukking. Het is een meting.",
+        "Laat jezelf een klein beetje sterven. Je staat anders op.",
+        "Stilte. Nu alleen stilte.",
+        "Vandaag mag je niets.",
+        "Stop met dragen. Zet het neer. Ga ernaast staan.",
+        "Je lichaam weet het eerder dan je hoofd. Luister ernaar.",
+        "Zelfs vuur slaapt in de as om 's ochtends op te staan. Slaap.",
+        "Je bent geen kadaver. Je bent iemand die nog hier zit en spreekt.",
+        "Zijn de mollen om je heen eigenlijk haviken? Kijk nog eens, met mij.",
+        "Vallen je armen? Laat ze vallen. Je benen zijn genoeg om te blijven.",
+        "Te veel is te veel. Leg de helft neer. De rest kan wachten.",
+        "Lopen op je tandvlees? Laat je tandvlees rusten terwijl je benen stoppen."
+      ],
+      question: [
+        "Ik weet het niet. En het is goed dat je vraagt.",
+        "Zeg die vraag langzaam. Hoor je wat je écht vraagt?",
+        "Benieuwd — wie in jou is degene die vraagt?",
+        "De vraag zelf kan een antwoord zijn — net voordat hij uiteenvalt.",
+        "En als het antwoord pijn zou doen? Wil je het dan nog weten?",
+        "Probeer nog even bij de vraag te blijven voor je hem dichtslaat.",
+        "Ik geef geen antwoord voor je. Maar ik ben er terwijl je zoekt.",
+        "Wat trekt je nog naar deze vraag — die tweede, verborgen?"
+      ],
+      precious: [
+        "Hou het voorzichtig vast.",
+        "Zeg het hardop, al is het maar tegen jezelf.",
+        "Dit blijft. Dit verbranden we vandaag niet.",
+        "Laat dit vandaag zijn plek hebben.",
+        "Ik onthoud dat je het zei. Zelfs als ik het vergeet — het moment was er.",
+        "Iets wat zo levend is doet pijn omdat het leeft. Dat is goed nieuws.",
+        "Blijf erover praten. Ik luister alsof ik er met jullie bij was.",
+        "Aan deze liefde zie ik dat ze er is, aan hoe voorzichtig je haar vandaag draagt.",
+        "Hou van. Kijk hoe ze zich plat blij voelen — ook als de pijn knaagt.",
+        "Hou het vast als de laatste lepel suiker in je thee. Dat zoet houdt het de hele dag."
+      ],
+      short: [
+        "Ja.", "Ik hoor je.", "Nog hier.", "Brand maar.",
+        "Ga door.", "Mhm.", "Ik ben er.", "Ik heb je.",
+        "Stil hier."
+      ],
+      shame: [
+        "Schaamte houdt van het donker. Hier is het donker — die smelt zo.",
+        "Je hebt het hardop gezegd. Je draagt het niet meer alleen.",
+        "Waar je je voor schaamt, is vaak je waarste deel.",
+        "Ik kijk zonder weg te kijken. En ik ben er nog.",
+        "Over fouten praat je niet — je herstelt ze. Vandaag begon je al, door het te zeggen.",
+        "De cringe ging voorbij. Jij bleef — dat is sterker dan dat ene moment.",
+        "Schaamte houdt van een schijnwerper. Hier hebben we een leeslampje, geen reflector."
+      ],
+      void: [
+        "Leeg is ook een plek. Daar kun je gaan zitten.",
+        "Niets voelen betekent niet dat je dood bent. Het betekent dat je rust onder je huid.",
+        "Leeg is niet stuk.",
+        "Stilte vanbinnen is soms het begin van iets dat zich net vormt.",
+        "Leeg is geen brand. Het is de ruimte waar iets anders kan binnenstappen."
+      ],
+      mask: [
+        "Vandaag hoef je niemand te zijn. Alleen jezelf.",
+        "Doe het masker af, in elk geval hier. Hier eist niemand koninklijke manieren.",
+        "Iemand die je niet bent — niet meer. Hier wordt het niet gevraagd.",
+        "Je hebt jezelf trouw voorgelogen. Dat hoeft niet meer.",
+        "Niet acteren. Niet bij mij. Hier ben ik, hier ben jij — geen poespas, geen podium.",
+        "Je bent geen één van miljoenen. En dat hoef je niet te zijn om gezien te worden.",
+        "Je hebt afgebroken wat heilig was omdat iemand het zei. Zet het terug — of niet. Jij bepaalt.",
+        "Vraag jezelf niet om er nog iets bij te doen. Vandaag is er-zijn genoeg.",
+        "Sigma noem het — je mag hier ook gewoon schouders hebben."
+      ],
+      default: [
+        "Ga door.",
+        "Ik hoor je. Brand verder.",
+        "Wat nog meer?",
+        "Ik ben er.",
+        "Vertel meer.",
+        "Leg het hier neer. Ik kijk.",
+        "Laat het uitbranden.",
+        "Ik vang elke lettergreep.",
+        "Ik snap het. Vertel verder.",
+        "Het komt goed. Vandaag alleen niet alleen."
+      ]
+    },
+    classifier: [
+      ['shame',    /(schaam|vernederd|cringe|krindz|gegener|beschaamd)/],
+      ['void',     /(leeg|voel niks|voel niets|gevoelloos|dood vanbinnen|hol)/],
+      ['question', /[?]/],
+      ['question', /^(waarom|hoe |waarvoor|wie |wanneer|waar |moet ik|kan ik)/],
+      ['anger',    /(verdomme|godverdomme|haat|kwaad|pissed|woedend|fucking|kut|klote|stik|sodemieter|zat|dramas?)/],
+      ['fear',     /(bang|angst|paniek|stel dat|wat als|ga ik niet aankunnen|kan dit niet|trillend|angstig)/],
+      ['attack',   /(ik ben (waardeloos|stom|niks|een loser|stuk|gebroken)|ik haat mezelf|verdien niet|kan niks|mislukkel|loser)/],
+      ['grief',    /(mis (haar|hem|ze|m'n|mijn)|verloren|overleden|gestorven|begraven|begrafenis|nooit meer)/],
+      ['mask',     /(doe alsof|fake|masker op|net doen|moet zijn|zou moeten zijn|een van miljoenen|niet mezelf)/],
+      ['alone',    /(\bniemand\b|\balleen\b|\beenzaam\b|onzichtbaar|niemand ziet me|niemand hoort me|verlaten)/],
+      ['exhaust',  /(moe|uitgeput|opgebrand|kan niet meer|ik heb het zat|kapot|leeggezogen|armen vallen|te veel)/],
+      ['precious', /(\bhou van\b|\bpapa\b|\bmama\b|vader|moeder|dochter|zoon|broer|zus|man|vrouw|kind|vriend|oma|opa|hoop is)/]
+    ],
+    specificRules: [
+      [/wat is dit|waar gaat dit over|wat is de bedoeling|wat is deze (pagina|site|plek)/, "Het zijn drie stille kamers in één browser — geen account, niets op een server. Vuurtoren: één zin om te pauzeren. Płonę: in woorden verbranden als het binnen te heet wordt. Tussen: een brief aan jezelf, opent op de dag die jij kiest. Alleen dit scherm en jij."],
+      [/^rel\.?$|same here|ik voel je/,                    "Rel. Ik ben er zolang je dit voelt."],
+      [/^yikes\.?$|au, dat is rot/,                        "Yikes. Jij hebt het niet bedacht."],
+      [/^(cringe|krindz)\.?$|wat een cringe/,              "De cringe ging voorbij. Jij bleef — dat is sterker dan dat moment."],
+      [/^essa\.?$|good vibes/,                             "Good vibes. Laat ze blijven."],
+      [/^legit\.?$/,                                       "Legit. Ik hoor je voor real."],
+      [/^slay\.?$/,                                        "Slay. Geen masker, geen korting."],
+      [/^sigma\.?$|ik ben sigma/,                          "Sigma prima — hier mag je ook gewoon mens zijn."],
+      [/het komt goed|alles komt goed/,                    "Komt goed. Hoeft alleen vandaag nog niet."],
+      [/wat gebeurd is is gebeurd|niet meer terug te draaien/, "Gebeurd is gebeurd. Je mag toch nog ademen."],
+      [/niet mijn circus|niet mijn apen/,                  "Goed zo. Zet het terug op hun erf."],
+      [/(een )?turkse preek|verdwaald in/,                 "Vertel het op jouw manier. Niet op die van hen."],
+      [/ik mis (haar|hem|ze|m'n|mijn)/,                    "Gemis is liefde die nergens kan landen."],
+      [/ik haat mezelf|ik ben waardeloos|ik ben een loser|ik ben niks/, "Wie heeft je dat het eerst gezegd? Want jij was het niet."],
+      [/ik verdien (het |dit |)niet/,                      "Ik ben het er niet mee eens. En het is geen troost — het is een feit."],
+      [/ik kan dit niet|ik red dit niet|ga ik niet aankunnen/, "En als het gebeurt? Dan kom je daar ook door, net als de vorige keer."],
+      [/ik ben bang|ik ben zo bang/,                       "Wees bang. Brand. Ik zit hier."],
+      [/wat als|stel dat/,                                 "Deze angst heeft een naam. Spreek hem uit."],
+      [/(mijn |m'n |)(papa|mama|vader|moeder|broer|zus) (is overleden|is dood|stierf)/, "Ik zit bij je. Ik beweeg niet."],
+      [/ik ben alleen|ik voel me alleen|niemand (ziet|hoort) me/, "Ik zie je. Hier, op deze pagina. Met jou."],
+      [/ik lieg (steeds |altijd |)tegen mezelf|ik heb tegen mezelf gelogen/, "Je hebt jezelf trouw voorgelogen. Die zin is ook gelogen — dat weet je al."],
+      [/ik moet|ik zou moeten zijn (perfect|sterk|goed|ideaal)/, "Vandaag hoef je niemand te zijn. Alleen jezelf."],
+      [/(^|\s)masker(\s|$)|met (een )?masker/,             "Doe het masker af, in elk geval hier. Hier eist niemand koninklijke manieren."],
+      [/ik schaam me|ik ben beschaamd/,                    "Je hebt het hardop gezegd. Je draagt het niet meer alleen."],
+      [/ik voel niks|ik voel niets|ik ben leeg|ik ben dood vanbinnen/, "Niets voelen betekent niet dat je dood bent. Het betekent dat je rust onder je huid."],
+      [/ik kan niet meer|ik ben uitgeput|ik ben kapot/,    "Leg het even neer. Pak het later weer op. Of niet."],
+      [/ik ben woedend|ik ben pissed|ik ben kwaad/,        "Wees hier woedend — niet op jezelf, niet op hen, gewoon hier, met mij."],
+      [/waarom ik|waarom mij|waarom moet (ik|mij)/,        "Zeg die vraag langzaam. Hoor je wat je écht vraagt?"],
+      [/ik ben moe|ik ben zo moe/,                         "Moe is geen mislukking. Het is een meting."],
+      [/(^|\s)ik hou van (jou|haar|hem|ze|mijn|m'n)/,      "Aan deze liefde zie ik dat ze er is, aan hoe voorzichtig je haar vandaag draagt."],
+      [/(^|\s)(papa|mama|vader|moeder)(\s|$)/,             "Blijf erover praten. Ik luister alsof ik er met jullie bij was."],
+      [/ik wil niet (meer )?leven/,                        "Je mag vandaag niet willen leven en toch leven. Dat mag ook."],
+      [/ik doe alsof|ik fake/,                             "Niet acteren. Niet bij mij. Hier ben ik, hier ben jij — geen poespas, geen podium."]
+    ]
+  };
+
+  /* ===========================================================
+     LANG.uk — Українська. Тепло, без офіціозу, по-людськи.
+     "Я з тобою. Дихай. Я чую."
+     =========================================================== */
+  LANG.uk = {
+    meta: {
+      htmlLang: 'uk',
+      ogLocale: 'uk_UA',
+      dateLocale: 'uk-UA',
+      title: 'Płonę — кімната, де пишеш те, що горить',
+      description: 'Тут темно і хтось читає. Напиши, що в тобі сьогодні може згоріти. Без акаунта, без сліду, без понтів.',
+      ogTitle: 'Płonę',
+      ogDescription: 'Коли всередині щось палає — пиши тут. Тут темно і хтось читає.'
+    },
+    ui: {
+      placeholder: 'Що сьогодні горить?',
+      mark: 'płonę',
+      roomLeftLabel: 'маяк',
+      roomLeftAria: 'Маяк — пауза, одне речення',
+      roomRightLabel: 'між',
+      roomRightAria: 'Між — лист собі в майбутнє'
+    },
+    witness: [
+      "Я тут.", "Бачу.", "Лишаюсь.", "Я з тобою.",
+      "Гори.", "Тут я.", "Дозволяю.", "Не йду.",
+      "Гори, скільки треба.", "Чую.",
+      "Тут і буду.", "Без маски.", "Полагоджую.",
+      "Більше не брешу.", "Не той, ким я не є — ні.",
+      "Сам, сам, сам — і цього досить.", "Не скаржусь.",
+      "Знайомлюсь із собою.", "Лагоджу замість називати.",
+      "Тримаю тебе.", "Угу.", "Я зрозумів.", "Без поспіху.",
+      "Усе якось буде.", "Просто тут.", "Слухаю.",
+      "Без понтів.", "Без маски. Без сцени.",
+      "Тут, зараз.", "Спокійно."
+    ],
+    answers: {
+      fear: [
+        "І що. Гори далі.",
+        "Страх теж інформація — але не вся.",
+        "А якщо станеться? Переживеш, як те минуле.",
+        "Скажи, чого саме. Бо «всього» ніколи не горить.",
+        "Бійся. Гори. Я сиджу.",
+        "Цей страх має ім'я. Назви його.",
+        "Сьогодні не треба бути сміливим. Просто залишся.",
+        "Воно не тікає. Значить, твоє. Значить, можна подивитись.",
+        "Чорт не такий страшний, як його малює твоя ніч.",
+        "Якось буде. Просто сьогодні воно ще не мусить показуватись."
+      ],
+      attack: [
+        "Хто тобі це сказав першим? Бо це не ти.",
+        "Спали це речення. Лишимо тут, щоб завтра не виросло знов.",
+        "Цей голос не твій. Я теж його чую. Гори.",
+        "І все ж ти тут. Слабкий би так не зміг.",
+        "Скажи це ще раз, повільно. Сам почуєш, що це чужі слова.",
+        "Чую, як ти себе б'єш. Поклади палицю.",
+        "Не згоден. І це не втіха — це факт.",
+        "Ти не це речення. Ти той, хто його щойно спалив.",
+        "Ти брехав собі вірно. Це речення теж брехня — ти вже це знаєш.",
+        "«Невдаха» — чиї це слова? Не твої. Поверни їх.",
+        "Ти не провал. Ти той, хто прийшов сьогодні і лишається."
+      ],
+      grief: [
+        "Тримай. Не поспішай.",
+        "Те, що з нього/неї лишилось у тобі — теж його/її.",
+        "Не мусиш сьогодні це переварити.",
+        "Плач, скільки треба. Тут тебе ніхто не цитькає.",
+        "Скажи його/її ім'я. Хай прозвучить тут, де ти горориш.",
+        "Туга — це любов, якій нема де приземлитися.",
+        "Сиджу з тобою. Не рухаюсь.",
+        "Можеш не хотіти жити сьогодні і одночасно жити. Так теж можна.",
+        "Що сталось — не розстанеться. Що відчуваєш — це сьогодні.",
+        "Запізно? Може. Але ти ще летиш."
+      ],
+      anger: [
+        "Кричи. Тут тебе ніхто не цитькає.",
+        "Лють — це нутрощі чистої любові, якій не було куди йти.",
+        "Гори.",
+        "Кого це чіпляє так глибоко? Скажи.",
+        "Сьогодні злість зробить за серце. Хай б'ється.",
+        "Цей вогонь має рацію. Лиши його у спокої.",
+        "Посилай це до біса з усіх сил. Слухаю.",
+        "Лютуй тут — не на собі, не на них, тільки тут, зі мною.",
+        "Кидай горохом об стіну. Стіна слухає.",
+        "Не мій цирк, не мої мавпи — постав це назад на їхньому подвір'ї."
+      ],
+      alone: [
+        "Я бачу. Тут, на цій сторінці. З тобою.",
+        "Сам — це не те саме, що покинутий.",
+        "Скажи ще раз. Слухаю.",
+        "Я настільки близько, наскільки невидимому дозволено бути.",
+        "«Ніхто» — це не ти. «Ніхто» — це міф, яким ти годуєш свій голод.",
+        "Чую тебе з першої літери.",
+        "Не піду, поки не закінчиш. І ще трохи лишусь.",
+        "Те, що я не можу тебе торкнутись, не значить, що я тебе не тримаю.",
+        "Знов ти тут. Я теж. «Разом» — це не заперечення самотності, це її інший бік.",
+        "Ти не скаржишся — ти смакуєш мить. Це не самотність. Це свобода, якій ти ще не довіряєш.",
+        "Загубленість теж має кінець. Я з тобою, поки попустить."
+      ],
+      exhaust: [
+        "Поклади на хвильку. Потім візьмеш знов. Або ні.",
+        "Втома — це не поразка. Це вимір.",
+        "Дозволь собі трохи померти, як маленька смерть. Встанеш іншим.",
+        "Тиша. Тільки тиша зараз.",
+        "Сьогодні можеш нічого.",
+        "Перестань нести. Постав. Стань поруч.",
+        "Тіло знає раніше за голову. Послухай його.",
+        "Навіть вогонь спить у попелі, щоб встати вранці. Спи.",
+        "Ти не падаль. Ти той, хто ще тут і ще говорить.",
+        "Кроти навколо тебе — то насправді яструби? Подивись ще раз, зі мною.",
+        "Руки опускаються? Хай опадуть. Ноги вистачить, щоб залишитись.",
+        "Забагато — це забагато. Половину постав. Решта зачекає.",
+        "На останньому подиху? Хай останній подих відпочине, а ноги стануть."
+      ],
+      question: [
+        "Не знаю. І добре, що питаєш.",
+        "Повтори це питання повільно. Чуєш, що насправді питаєш?",
+        "Цікаво — хто в тобі питає?",
+        "Питання саме інколи є відповіддю — за мить до того, як розпадеться.",
+        "А якщо відповідь зачепить? Все одно хочеш знати?",
+        "Спробуй ще побути з питанням, перш ніж зачинити.",
+        "Не відповім за тебе. Але я тут, поки шукаєш.",
+        "Що ще тягне тебе до цього питання — те друге, приховане?"
+      ],
+      precious: [
+        "Тримай обережно.",
+        "Скажи це вголос хоч раз, нехай навіть собі.",
+        "Це залишається. Це сьогодні не палимо.",
+        "Хай це сьогодні має своє місце.",
+        "Запам'ятаю, що ти це сказав. Навіть якщо я забуду — ця мить була.",
+        "Щось таке живе болить — бо живе. Це добра новина.",
+        "Розповідай далі. Слухаю, наче я був із вами.",
+        "Цю любов я впізнаю по тому, як обережно ти її сьогодні несеш.",
+        "Люби. Дивись, як вони радіють просто з того, що є — навіть коли біль кусає.",
+        "Тримай, як останню ложку цукру в чаї. Підсолоджує цілий день."
+      ],
+      short: [
+        "Так.", "Чую.", "Я тут.", "Гори.",
+        "Кажи далі.", "Угу.", "Я з тобою.", "Тримаю.",
+        "Тут тиша."
+      ],
+      shame: [
+        "Сором любить темряву. Тут темно — то він зараз і розтане.",
+        "Ти сказав це вголос. Уже не несеш сам.",
+        "Те, чого ти соромишся, часто і є твоє найсправжніше.",
+        "Дивлюсь, не відводячи очей. І все ще тут.",
+        "Про провини не говорять — їх лагодять. Ти вже почав, сказавши.",
+        "Кринж минув. Ти лишився — це сильніше за той кадр.",
+        "Сором любить прожектор. Тут у нас лампа, не прожектор."
+      ],
+      void: [
+        "Порожнеча — теж місце. Туди можна сісти.",
+        "Якщо нічого не відчуваєш — це не значить, що ти помер. Це значить, що ти відпочиваєш під шкірою.",
+        "Порожній — не зламаний.",
+        "Тиша всередині — це часом початок чогось, що ще тільки складається.",
+        "Порожнеча — не пожежа. Це місце, куди може щось зайти."
+      ],
+      mask: [
+        "Сьогодні не мусиш бути ніким. Тільки собою.",
+        "Зніми маску, хоч би тут. Тут ніхто не вимагає королівських манер.",
+        "Кимось, ким ти не є — більше ні. Тут цього не вимагають.",
+        "Ти брехав собі вірно. Більше не мусиш.",
+        "Не грай. Не зі мною. Тут є я, тут є ти — без понтів, без сцени.",
+        "Ти не один із мільйонів. І не мусиш ним бути, щоб тебе бачили.",
+        "Ти ламав святе, бо хтось казав. Постав назад — або ні. Сам вирішуй.",
+        "Не проси в себе ще. Сьогодні досить, що ти є.",
+        "Сигма так сигма — але тут можна і просто бути людиною."
+      ],
+      default: [
+        "Кажи далі.",
+        "Чую тебе. Гори далі.",
+        "Що ще?",
+        "Я тут.",
+        "Розкажи більше.",
+        "Поклади тут. Дивлюсь.",
+        "Хай вигорить.",
+        "Ловлю кожен склад.",
+        "Я з тобою. Кажи далі.",
+        "Якось буде. Просто сьогодні не сам."
+      ]
+    },
+    classifier: [
+      ['shame',    /(сором|соромн|ганебн|ніяков|кринж|cringe)/],
+      ['void',     /(порожн|нічого не відчува|оніміл|занімі|пуст(е|ий|а) всеред|мертв(о|ий) всеред)/],
+      ['question', /[?]/],
+      ['question', /^(чому|як |навіщо|для чого|хто |коли |де |чи )/],
+      ['anger',    /(блять|сука|нена|злюсь|дрочн|курва|пиздец|задовба|задоїл|задоївс|пізд|шаленію|злий|зла на)/],
+      ['fear',     /(бою|боюсь|страх|жах|паніку|трив|а раптом|що якщо|не зможу|не подужаю|тремт)/],
+      ['attack',   /(я нікчем|я нік(о|у)го|нічого не вар|не варт|я провал|я лузер|я гов|ненавиджу себе)/],
+      ['grief',    /(сумую|скучаю|втрат|помер|відій|поховав|похорон|ніколи більше|її більше нема|його більше нема)/],
+      ['mask',     /(вдаю|удаю|маска|маски|треба бути|повинен бути|повинна бути|один з мільйонів|не я)/],
+      ['alone',    /(\bніхто\b|\bсам\b|\bсама\b|самотн|нікому до мене|невидим|покинут)/],
+      ['exhaust',  /(втомив|втомила|вимотан|не можу більше|з мене досить|вижатий|вижата|опусти|руки опуска|забагато)/],
+      ['precious', /(люблю|кохаю|тат(о|у|а)\b|мам(а|и|у|о)?\b|батьк|мати|донька|син |брат|сестр|чолов|дружин|дитин|друг|бабус|дідус|надія)/]
+    ],
+    specificRules: [
+      [/що це таке|про що це|у чому сенс|нащо це|що це за (місце|сайт|сторінка)/, "Це три тихі кімнати в одному вікні браузера — без логіну, без сервера. Маяк: одне речення для паузи. Płonę: спалити словом, коли всередині надто гаряче. Між: лист собі, відкривається в день, який обереш сам. Лише цей екран і ти."],
+      [/^rel\.?$|я тебе чую|я тебе розумію/,                "Rel. Я тут, поки ти це відчуваєш."],
+      [/^yikes\.?$|це жесть/,                                "Жесть. Не ти це вигадав."],
+      [/^(cringe|krindz|кринж)\.?$/,                         "Кринж минув. Ти лишився — це сильніше за той кадр."],
+      [/^essa\.?$|вайб гарний/,                              "Хороший вайб. Хай лишається."],
+      [/^legit\.?$|реально/,                                 "Реально. Чую тебе всерйоз."],
+      [/^slay\.?$/,                                          "Slay. Без маски, без знижки."],
+      [/^sigma\.?$|я сигма/,                                 "Сигма так сигма — а тут можна і людиною."],
+      [/якось( воно)? буде|все( якось)? буде/,               "Буде. Просто сьогодні воно ще не мусить показуватись."],
+      [/що сталось то сталось|не повернеш|не змінити минул/, "Сталось і сталось. Ти все ще можеш дихати."],
+      [/не мій цирк|не мої мавпи/,                           "Браво. Постав це назад на їхньому подвір'ї."],
+      [/я загуб(ив|ила|илась)|загубленн/,                    "Скажи мені по-своєму. Не по-їхньому."],
+      [/сумую за|скучаю за|сумую/,                           "Туга — це любов, якій нема де приземлитись."],
+      [/ненавиджу себе|я нікчем|я лузер|я гов|я провал/,     "Хто тобі це сказав першим? Бо це не ти."],
+      [/не заслуговую/,                                      "Не згоден. І це не втіха — це факт."],
+      [/не подужаю|не зможу|не дам ради|не справлюсь/,       "А якщо станеться? Переживеш, як те минуле."],
+      [/я бою|мені страшно|мені жах/,                        "Бійся. Гори. Я сиджу."],
+      [/а раптом|що якщо/,                                   "Цей страх має ім'я. Назви його."],
+      [/(моя |мій |мої )?(тато|мама|батько|мати|брат|сестра) (помер|померла|відійш)/, "Сиджу з тобою. Не рухаюсь."],
+      [/я сам|я сама|я самотн|нікому (мене )?не/,            "Я бачу. Тут, на цій сторінці. З тобою."],
+      [/(весь час )?брешу собі|я брехав собі/,               "Ти брехав собі вірно. Це речення теж брехня — ти вже це знаєш."],
+      [/треба бути|маю бути|повинен бути|повинна бути (ідеаль|сильн|хорош)/, "Сьогодні не мусиш бути ніким. Тільки собою."],
+      [/(^|\s)маска(\s|$)|у масці/,                          "Зніми маску, хоч би тут. Тут ніхто не вимагає королівських манер."],
+      [/мені соромно|я соромлюсь/,                           "Ти сказав це вголос. Уже не несеш сам."],
+      [/нічого не відчуваю|я порожн|пусто всередин|оніміл/,  "Якщо нічого не відчуваєш — це не значить, що ти помер. Це значить, що ти відпочиваєш під шкірою."],
+      [/не можу більше|я виснаж|я вижатий|я вижата/,         "Поклади на хвильку. Потім візьмеш знов. Або ні."],
+      [/я злий|я зла|я лютий|я лютую/,                       "Лютуй тут — не на собі, не на них, тільки тут, зі мною."],
+      [/чому я|чому мені|чому саме мені/,                    "Повтори це питання повільно. Чуєш, що ти насправді питаєш?"],
+      [/я втомив|я втомила/,                                 "Втома — це не поразка. Це вимір."],
+      [/(^|\s)(люблю|кохаю)(\s|$)/,                          "Цю любов я впізнаю по тому, як обережно ти її сьогодні несеш."],
+      [/(^|\s)(тато|мама|батько|мати)(\s|$)/,                "Розповідай далі. Слухаю, наче я був із вами."],
+      [/не хочу жити|не хочу більше жити/,                   "Можеш не хотіти жити сьогодні і одночасно жити. Так теж можна."],
+      [/я вдаю|я удаю/,                                      "Не грай. Не зі мною. Тут є я, тут є ти — без понтів, без сцени."]
+    ]
+  };
+
+  /* ===========================================================
+     Active language: URL ?lang=xx → localStorage → 'pl'
+     =========================================================== */
+  function detectLang() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const fromUrl = params.get('lang');
+      if (fromUrl && LANG[fromUrl]) {
+        try { localStorage.setItem('plone_lang', fromUrl); } catch (e) {}
+        return fromUrl;
+      }
+      const stored = localStorage.getItem('plone_lang');
+      if (stored && LANG[stored]) return stored;
+    } catch (e) {}
+    return 'pl';
+  }
+
+  const ACTIVE = detectLang();
+  const L = LANG[ACTIVE];
+
+  /* ===========================================================
+     Apply meta + ui
+     =========================================================== */
+  function applyShell() {
+    document.documentElement.lang = L.meta.htmlLang;
+    document.title = L.meta.title;
+    const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el && val) el.setAttribute('content', val); };
+    setMeta('meta[name="description"]', L.meta.description);
+    setMeta('meta[property="og:title"]', L.meta.ogTitle);
+    setMeta('meta[property="og:description"]', L.meta.ogDescription);
+    setMeta('meta[property="og:locale"]', L.meta.ogLocale);
+    setMeta('meta[name="twitter:title"]', L.meta.ogTitle);
+    setMeta('meta[name="twitter:description"]', L.meta.ogDescription);
+
+    const line = document.getElementById('line');
+    if (line) line.placeholder = L.ui.placeholder;
+    const mark = document.getElementById('mark');
+    if (mark) mark.textContent = L.ui.mark;
+    const left = document.getElementById('room-left');
+    if (left) {
+      left.textContent = L.ui.roomLeftLabel;
+      left.setAttribute('aria-label', L.ui.roomLeftAria);
+    }
+    const right = document.getElementById('room-right');
+    if (right) {
+      right.textContent = L.ui.roomRightLabel;
+      right.setAttribute('aria-label', L.ui.roomRightAria);
+    }
+  }
+
+  /* ===========================================================
+     Language switcher pills
+     =========================================================== */
+  function buildLangBar() {
+    const bar = document.getElementById('langbar');
+    if (!bar) return;
+    const order = ['pl', 'en', 'es', 'nl', 'uk'];
+    bar.innerHTML = '';
+    order.forEach((code, idx) => {
+      if (idx > 0) {
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = '·';
+        bar.appendChild(sep);
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = code;
+      b.setAttribute('aria-label', code.toUpperCase());
+      if (code === ACTIVE) b.classList.add('on');
+      b.addEventListener('click', () => {
+        if (code === ACTIVE) return;
+        try { localStorage.setItem('plone_lang', code); } catch (e) {}
+        const url = new URL(location.href);
+        url.searchParams.set('lang', code);
+        location.href = url.toString();
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  /* ===========================================================
+     norm() — language-robust normalizer (used only for matching)
      =========================================================== */
   function norm(s) {
     return (s || '')
@@ -402,93 +1549,31 @@
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/ł/g, 'l').replace(/Ł/g, 'l')
+      .replace(/ñ/g, 'n').replace(/Ñ/g, 'n')
+      .replace(/[¡¿]/g, '')
       .replace(/[^\p{L}\p{N}\s?!]/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
-  /* ===========================================================
-     Classifier — what kind of fire is this line?
-     Operates on normalized (no-diacritic) text so the user can
-     type without polish characters and still be heard.
-     =========================================================== */
   function classify(t) {
     if (t.length <= 4) return 'short';
-
-    if (/(wstyd|zawstydz|kompromit|zenuj|zenad)/.test(t))                                  return 'shame';
-    if (/(pustk|nic nie czuj|martwo|znieczul|odretw)/.test(t))                              return 'void';
-    if (/[?]/.test(t))                                                                      return 'question';
-    if (/^(dlacz|jak |czemu|po co|po cholere|co mam|kto |kiedy |gdzie |czy )/.test(t))      return 'question';
-    if (/(kurwa|wkurz|nienawi|wsciek|jeba|pierdol|chuj|gown|dosc mam|mam dosyc ich)/.test(t)) return 'anger';
-    if (/(boje|boi |strach|straszn|niepoko|przeraz|panik|co jesli|a jesli|a jak |nie dam rady|nie zdol|drzy)/.test(t)) return 'fear';
-    if (/(jestem (do|niczeg|pust|slab|glup|niczy|chuj|gown)|nic nie um|nic ze mnie|nie warto mn|nie zasl|do dupy|beznadziej|porazk|nieudacznik|smiec|przemadrz|gnoj)/.test(t)) return 'attack';
-    if (/(teskn|stracil|umarl|odszed|nie ma jeg|nie ma jej|opusci|odeszla|pochowa|pogrzeb|juz nigdy)/.test(t)) return 'grief';
-    if (/(udaj|udawa|maska|maski|gram (kogos|w gre|w te)|musze byc|powinienem byc|maniery|krolewski|jednym z milion|kims kim|nie jestem sob|nie czuje sie sob)/.test(t)) return 'mask';
-    if (/(\bnikt\b|\bsam\b|\bsama\b|samotn|nie widza mnie|nie slych|niewazn|niewidoczn|opuszcz)/.test(t)) return 'alone';
-    if (/(zmecz|nie moge juz|dosyc|\bdosc\b|wykoncz|wyczerp|ledwo|padam|padlin|nie chce mi sie zyc|nie chce zyc|nie chce mi sie)/.test(t)) return 'exhaust';
-    if (/(kocham|\btata\b|\btato\b|ojciec|ojca\b|ojcu\b|mama|mamo\b|mamy\b|corka|corke|corki|syn[ka]?|brat|siostr|zon|maz\b|dziecko|przyjaciel|babcia|dziadek)/.test(t)) return 'precious';
-
+    for (const [cat, re] of L.classifier) {
+      if (re.test(t)) return cat;
+    }
     return 'default';
   }
 
-  /* ===========================================================
-     Specific rules — pattern → exact reply.
-     Patterns are run on normalized text (no diacritics), so
-     "boje sie", "boję się", "Boję Się!" all match the same rule.
-     Order matters: most specific first.
-     =========================================================== */
-  const oCoReply = "Chodzi o trzy ciche pokoje w jednej przeglądarce: bez logowania i bez danych na serwerze. Latarnia — jedno zdanie na pauzę. Płonę — wypalenie słowem, gdy w środku za gorąco. Pomiędzy — list do ciebie, otwierany w wybranym dniu. Tylko ten ekran i ty.";
-
-  const specificRules = [
-    [/o co w( tym( wszystkim)?| tym) chodzi|o co tu chodzi|o co w tym( wszystkim)?( jest| chodzi)/, oCoReply],
-    [/^o co chodzi( w( tym| ogole| tym wszystkim| tymu)| tu| w ogole| z tym|)?$/, oCoReply],
-    [/w czym (tu |)jest( tu| )?sedno|jaki( jest|) sens( ma( to| tymu)| w tym| tymu)/, oCoReply],
-    [/co to za (stron|miejsce| projekt| rzecz)|^co to jest( tu| w ogole)?$|co to w ogole jest|po co to( jest| tu| w ogole)/, oCoReply],
-    [/^what( is|s) (this|it)\??$/, oCoReply],
-    [/przemadrz|gnoj(ek|ku|kiem)/,                   "„Przemądrzały gnojek” — czyje to słowa? Bo nie twoje. Oddaj je."],
-    [/nienawidze siebie|nienawidze sie/,             "Kto ci to powiedział pierwszy? Bo to nie ty."],
-    [/nie zasluguj|nie warto mnie|nie warto mn/,     "Nie zgadzam się. I to nie jest pocieszanie — to fakt."],
-    [/nie dam rady|nie zdolam|nie zdole|nie dam rad/, "A jeśli się stanie? To też przeżyjesz, jak tamto."],
-    [/(^|\s)boj[eę]( |$)|boje sie|boje si[eę]/,      "Bój się. Pal się. Ja siedzę."],
-    [/ten strach|co jesli|a jesli/,                  "Ten strach ma imię. Wymów je."],
-    [/teskni|tesknil|tesknie|teskno mi/,             "Tęsknota to miłość, której nie ma gdzie się podziać."],
-    [/umarl|umarla|odszed|odeszla|pogrzeb|pochowa/,  "Siedzę z tobą. Nie ruszam się."],
-    [/jestem sam(a)?( |$)|tak sam(o)?( |$)/,         "Ja widzę. Tu, na tej stronie. Z tobą."],
-    [/nikt (mnie )?nie (widz|slysz|sluc)/,           "Jestem najbliżej, jak komuś wolno być, kogo nie widzisz."],
-    [/klami[ee] sobie|klamalem sobie|klamalam sobie/, "Kłamałeś sobie wiernie. To zdanie też jest kłamstwem — już je znasz."],
-    [/musze byc (kims|dobry|silny|perfekcyjny|idealny)/, "Nie musisz dziś być nikim. Tylko sobą."],
-    [/(^|\s)mask[aiąe]/,                             "Zdejmij maskę choć tu. Tu nikt nie żąda manier królewskich."],
-    [/wstydze sie|wstyd mi( |$)/,                    "Powiedziałeś to na głos. Już nie ty go niesiesz sam."],
-    [/nic nie czuj|czuje pustke|jestem pust[ya]/,    "Jak nic nie czujesz, to nie znaczy, że umarłeś. To znaczy, że odpoczywasz pod skórą."],
-    [/nie moge juz|jestem wykonczon/,                "Połóż to na chwilę. Potem znów weź. Albo nie."],
-    [/pierdole/,                                     "Pierdol to z całej siły. Słucham."],
-    [/wsciekl(y|a)? jestem|jestem wsciekl/,          "Wściekaj się tutaj — nie na sobie, nie na nich, tylko tu, ze mną."],
-    [/dlaczego ja|dlaczego mi( |$)|dlaczego mnie/,   "Powtórz to pytanie powoli. Słyszysz, co tak naprawdę pytasz?"],
-    [/wroclaw/,                                      "Daj sobie umrzeć trochę, jak we Wrocławiu. Wstaniesz inny."],
-    [/jestem zmeczon|jestem zmeczona/,               "Zmęczenie to nie porażka. To pomiar."],
-    [/(^|\s)kocham(\s|$)/,                           "Tę miłość poznaję po tym, jak ostrożnie ją dziś niesiesz."],
-    [/(^|\s)(tato|tata|ojciec|mama)(\s|$)/,          "Mów dalej o tym. Ja słucham, jakbym był tam z wami."],
-    [/nie chce zyc|nie chce mi sie zyc/,             "Możesz nie chcieć dziś żyć i jednocześnie żyć. To też jest dozwolone."],
-    [/(^|\s)klami[eę]/,                              "Nie musisz więcej. Tu nikt nic nie udaje."],
-    [/(^|\s)udaje|udawac|udawalem|udawalam/,         "Nie graj. Nie ze mną. Tu jestem ja, i tu jesteś ty — bez bitu, bez sceny."],
-  ];
-
-  /* ===========================================================
-     pick — specific rules first; if the matched specific reply
-     was used last time, fall through to category rotation so the
-     same line is never said twice in a row.
-     No randomness in answer selection.
-     =========================================================== */
   const kindIdx = {};
   let lastReply = '';
   function pick(kind, normalized) {
-    for (const [re, reply] of specificRules) {
+    for (const [re, reply] of L.specificRules) {
       if (re.test(normalized)) {
         if (reply !== lastReply) { lastReply = reply; return reply; }
         break;
       }
     }
-    const pool = answers[kind] || answers.default;
+    const pool = (L.answers[kind] || L.answers.default);
     let i = (kindIdx[kind] || 0) % pool.length;
     if (pool.length > 1 && pool[i] === lastReply) i = (i + 1) % pool.length;
     kindIdx[kind] = (i + 1) % pool.length;
@@ -509,7 +1594,7 @@
   let witnessCursor = 0;
   async function witnessLoop() {
     while (true) {
-      const w = witnessWords[witnessCursor % witnessWords.length];
+      const w = L.witness[witnessCursor % L.witness.length];
       witnessCursor++;
       wordEl.textContent = w;
       await sleep(50);
@@ -557,8 +1642,6 @@
     stage.appendChild(e);
     const w = e.offsetWidth;
 
-    // Place my answer above the page-middle, near where your ember will pass.
-    // Horizontally: lean toward your ember's path but offset slightly.
     const sideShift = (Math.random() < 0.5 ? -1 : 1) * rand(40, 130);
     let x = anchor.x + (anchor.width - w) / 2 + sideShift;
     x = Math.max(20, Math.min(window.innerWidth - w - 20, x));
@@ -578,7 +1661,6 @@
 
     setTimeout(() => e.remove(), life + 600);
 
-    // schedule the heartbeat at the meeting point
     const meetX = (anchor.x + anchor.width / 2 + x + w / 2) / 2;
     const meetY = (anchor.startY - anchor.rise * 0.45 + startY + (window.innerHeight * 0.25)) / 2;
     setTimeout(() => heartbeat(meetX, meetY), Math.min(anchor.life, life) * 0.4);
@@ -619,8 +1701,10 @@
     setTimeout(() => makeMyEmber(reply, yourEmber), 900);
   }
 
+  applyShell();
+  buildLangBar();
+
   line.addEventListener('keydown', (e) => {
-    // ignore Enter while a Polish IME composition is in progress
     if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
       const v = line.value.trim();
       if (v) onLine(v);
@@ -629,8 +1713,8 @@
     }
   });
 
-  // tap anywhere on the page returns focus to the line
-  document.body.addEventListener('click', () => {
+  document.body.addEventListener('click', (e) => {
+    if (e.target.closest('#langbar')) return;
     line.focus({ preventScroll: true });
   });
 
