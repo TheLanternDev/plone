@@ -46,12 +46,14 @@
     line-height: 1.45;
     letter-spacing: 0.01em;
     opacity: 0;
-    transition: opacity 1.6s ease;
+    transition: opacity 1.4s ease;
     text-wrap: balance;
     padding: 0 1.2rem;
+    will-change: opacity;
+    contain: layout paint;
   }
   #stage.show { opacity: 1; }
-  #stage.fade { opacity: 0; transition: opacity 2.4s ease; }
+  #stage.fade { opacity: 0; transition: opacity 1.6s ease; }
   .glow {
     position: fixed;
     inset: 0;
@@ -61,25 +63,29 @@
   .beam {
     position: fixed;
     left: 50%; top: 50%;
-    width: 220vmax; height: 220vmax;
+    width: 140vmax; height: 140vmax;
     transform-origin: center center;
     pointer-events: none;
     background:
       conic-gradient(from 0deg,
         rgba(255, 220, 170, 0) 0deg,
         rgba(255, 220, 170, 0) 80deg,
-        rgba(255, 220, 170, 0.045) 90deg,
-        rgba(255, 220, 170, 0.012) 110deg,
+        rgba(255, 220, 170, 0.05) 92deg,
+        rgba(255, 220, 170, 0.012) 112deg,
         rgba(255, 220, 170, 0) 140deg,
         rgba(255, 220, 170, 0) 360deg);
     transform: translate(-50%, -50%) rotate(0deg);
-    animation: beam-spin 22s linear infinite;
-    filter: blur(20px);
+    animation: beam-spin 28s linear infinite;
+    filter: blur(10px);
     mix-blend-mode: screen;
-    opacity: 0.9;
-    transition: opacity 2.2s ease, filter 2.2s ease;
+    opacity: 0.85;
+    will-change: transform, opacity;
+    transition: opacity 2.2s ease;
   }
-  .beam.pulse { opacity: 1.1; filter: blur(16px) brightness(1.08); }
+  .beam.pulse { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .beam { animation: none; opacity: 0.5; }
+  }
   @keyframes beam-spin {
     to { transform: translate(-50%, -50%) rotate(360deg); }
   }
@@ -265,31 +271,51 @@
   const intro = document.getElementById('intro');
   const beam = document.getElementById('beam');
   let cursor = parseInt(sessionStorage.getItem('latarnia_cursor') || '0', 10);
-  let timer = null;
   let mainStarted = false;
+  let session = 0;
+  let pendingTimers = [];
+  function clearPending() {
+    for (const id of pendingTimers) clearTimeout(id);
+    pendingTimers.length = 0;
+  }
 
   function pick() {
     const s = sentences[cursor % sentences.length];
     cursor = (cursor + 1) % sentences.length;
-    sessionStorage.setItem('latarnia_cursor', String(cursor));
+    try { sessionStorage.setItem('latarnia_cursor', String(cursor)); } catch (e) {}
     return s;
   }
   function show() {
+    clearPending();
+    const my = ++session;
     const text = pick();
     stage.textContent = '';
     stage.classList.remove('fade');
     let i = 0;
     const speed = 55;
-    if (timer) { clearTimeout(timer); timer = null; }
     const tick = () => {
+      if (my !== session) return;
       stage.textContent = text.slice(0, ++i);
-      if (i < text.length) timer = setTimeout(tick, speed);
-      else timer = setTimeout(() => stage.classList.add('fade'), 8000);
+      if (i < text.length) pendingTimers.push(setTimeout(tick, speed));
+      else pendingTimers.push(setTimeout(() => {
+        if (my === session) stage.classList.add('fade');
+      }, 8000));
     };
     requestAnimationFrame(() => {
+      if (my !== session) return;
       stage.classList.add('show');
       tick();
     });
+  }
+  function fadeThenShow() {
+    const my = ++session;
+    clearPending();
+    stage.classList.add('fade');
+    pendingTimers.push(setTimeout(() => {
+      if (my !== session) return;
+      stage.textContent = '';
+      show();
+    }, 1700));
   }
   function runWelcome() {
     let wdone = false;
@@ -301,8 +327,9 @@
   }
   function pulseBeam() {
     beam.classList.add('pulse');
-    setTimeout(() => beam.classList.remove('pulse'), 3000);
+    setTimeout(() => beam.classList.remove('pulse'), 2500);
   }
+  let lastClickAt = 0;
   function startMain() {
     if (mainStarted) return;
     mainStarted = true;
@@ -310,9 +337,11 @@
     runWelcome();
     document.body.addEventListener('click', (e) => {
       if (e.target.closest('a')) return;
+      const now = Date.now();
+      if (now - lastClickAt < 600) return;
+      lastClickAt = now;
       welcome.classList.remove('on');
-      stage.classList.add('fade');
-      setTimeout(show, 1800);
+      fadeThenShow();
     });
   }
   const seenIntro = (() => { try { return sessionStorage.getItem('pokoje_intro') === '1'; } catch (e) { return false; } })();

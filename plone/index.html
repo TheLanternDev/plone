@@ -593,8 +593,10 @@
     setTimeout(() => h.remove(), 2800);
   }
 
-  // ambient — tiny embers drifting up so the page breathes between lines
+  const MAX_EMBERS = 14;
   function ambient() {
+    if (stage.childElementCount >= MAX_EMBERS) return;
+    if (document.hidden) return;
     const dot = document.createElement('div');
     dot.className = 'ember you lit';
     dot.textContent = '·';
@@ -634,8 +636,10 @@
 
   setTimeout(() => line.focus({ preventScroll: true }), 400);
   witnessLoop();
-  setInterval(ambient, 2400);
-  for (let i = 0; i < 3; i++) setTimeout(ambient, i * 800);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ambientGap = reduceMotion ? 6000 : 3600;
+  setInterval(ambient, ambientGap);
+  for (let i = 0; i < 2; i++) setTimeout(ambient, i * 1000);
 })();
 </script>
 </body>
