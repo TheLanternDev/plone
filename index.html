@@ -3,7 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Płonę</title>
+<title>Płonę — miejsce, gdzie pisze się to, co się pali</title>
+<meta name="description" content="Tu jest ciemno i ktoś czyta. Napisz, co dziś gore — wraca odpowiedź. Bez konta, bez śladu, bez bitu." />
+<meta name="theme-color" content="#050608" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Płonę" />
+<meta property="og:description" content="Kiedy coś gore — pisz tu. Tu jest ciemno i ktoś czyta." />
+<meta property="og:url" content="https://thelanterndev.github.io/plone/" />
+<meta property="og:image" content="https://thelanterndev.github.io/plone/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="pl_PL" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Płonę" />
+<meta name="twitter:description" content="Kiedy coś gore — pisz tu. Tu jest ciemno i ktoś czyta." />
+<meta name="twitter:image" content="https://thelanterndev.github.io/plone/og.png" />
+<link rel="canonical" href="https://thelanterndev.github.io/plone/" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400;1,500&display=swap" rel="stylesheet">
@@ -179,14 +194,127 @@
     pointer-events: none;
     z-index: 1;
   }
+  .room {
+    position: fixed;
+    bottom: 1.1rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(233, 227, 211, 0.18);
+    text-decoration: none;
+    z-index: 11;
+    transition: color 0.8s ease;
+  }
+  .room:hover { color: rgba(255, 200, 130, 0.55); }
+  .room.left  { left: 1.4rem; }
+  .room.right { right: 1.4rem; }
+
+  /* ===== Onboarding ===== */
+  #intro {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, rgba(255,130,50,0.06) 0%, rgba(5,6,8,0.96) 60%, rgba(5,6,8,1) 100%);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 1.6s ease;
+  }
+  #intro.gone { opacity: 0; pointer-events: none; }
+  #intro .panel {
+    max-width: min(86vw, 620px);
+    text-align: center;
+    padding: 0 1.4rem;
+    color: rgba(233, 227, 211, 0.92);
+  }
+  #intro .step {
+    display: none;
+    animation: step-in 1.6s ease forwards;
+  }
+  #intro .step.on { display: block; }
+  @keyframes step-in {
+    from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+  #intro h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    margin: 0 0 1.6rem;
+    letter-spacing: 0.02em;
+    color: rgba(255, 200, 130, 0.95);
+    text-shadow: 0 0 30px rgba(255, 140, 60, 0.25);
+  }
+  #intro p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+    line-height: 1.65;
+    margin: 0 0 0.6rem;
+    color: rgba(233, 227, 211, 0.78);
+  }
+  #intro p.dim { color: rgba(233, 227, 211, 0.45); font-size: clamp(0.95rem, 1.8vw, 1.1rem); }
+  #intro .rooms {
+    margin: 1.4rem 0 0.4rem;
+    display: grid;
+    gap: 0.6rem;
+    text-align: center;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  #intro .rooms b {
+    color: rgba(255, 200, 130, 0.92);
+    font-weight: 400;
+    margin-right: 0.4em;
+  }
+  #intro .hint {
+    margin-top: 2.4rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(233, 227, 211, 0.28);
+    animation: pulse-hint 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.3; }
+    50%      { opacity: 0.7; }
+  }
 </style>
 </head>
 <body>
+  <div id="intro" role="dialog" aria-label="Wprowadzenie">
+    <div class="panel">
+      <div class="step on" data-step="0">
+        <h2>Płonę</h2>
+        <p>Tu jest ciemno i ktoś czyta.</p>
+        <p>Napisz, co chcesz żeby dziś w Tobie spłonęło.</p>
+        <div class="hint">Kliknij, aby przejść dalej</div>
+      </div>
+      <div class="step" data-step="1">
+        <h2>Trzy pokoje</h2>
+        <p>Jedna obecność. Wybierz, co dziś potrzebne.</p>
+        <div class="rooms">
+          <div><b>Płonę</b> kiedy coś gore</div>
+          <div><b>Latarnia</b> gdy nic dziś nie musisz</div>
+          <div><b>Pomiędzy</b> list do siebie w przyszłość</div>
+        </div>
+        <p class="dim">Bez konta. Bez śladu. Bez bitu.</p>
+        <div class="hint">Kliknij, aby przejść dalej</div>
+      </div>
+    </div>
+  </div>
   <div id="witness"><span id="word"></span></div>
   <div id="stage"></div>
   <div id="compose">
-    <input id="line" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" autofocus placeholder="co dziś gore" />
+    <input id="line" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" autofocus placeholder="Co dzisiaj spłonie?" />
   </div>
+  <a class="room left"  href="latarnia/"  aria-label="Latarnia — kiedy nic nie chce">latarnia</a>
+  <a class="room right" href="pomiedzy/" aria-label="Pomiędzy — list do siebie w przyszłość">pomiędzy</a>
   <div id="mark">płonę</div>
 
 <script>
@@ -591,7 +719,63 @@
     line.focus({ preventScroll: true });
   });
 
-  setTimeout(() => line.focus({ preventScroll: true }), 400);
+  /* ===========================================================
+     Onboarding — pokaż przy pierwszej sesji, krótkie ujęcie idei.
+     Po ostatnim ekranie: ignite-burst (rój żarów wybucha w stronę
+     palety) i otwiera scenę.
+     =========================================================== */
+  function ignite() {
+    const N = 22;
+    for (let i = 0; i < N; i++) {
+      setTimeout(() => {
+        const dot = document.createElement('div');
+        dot.className = 'ember you lit';
+        dot.textContent = i % 4 === 0 ? '·' : '•';
+        dot.style.fontSize = (0.5 + Math.random() * 0.5) + 'rem';
+        dot.style.left = (window.innerWidth / 2 + (Math.random() - 0.5) * 220) + 'px';
+        dot.style.top  = (window.innerHeight * 0.62 + (Math.random() - 0.5) * 80) + 'px';
+        dot.style.setProperty('--sway', (Math.random() - 0.5) * 260 + 'px');
+        dot.style.setProperty('--rise', (window.innerHeight * (0.55 + Math.random() * 0.4)) + 'px');
+        dot.style.setProperty('--life', (4500 + Math.random() * 3500) + 'ms');
+        stage.appendChild(dot);
+        setTimeout(() => dot.remove(), 9000);
+      }, i * 35);
+    }
+  }
+
+  const intro = document.getElementById('intro');
+  const seen = (() => { try { return sessionStorage.getItem('plone_intro') === '1'; } catch (e) { return false; } })();
+  let introStep = 0;
+  function advanceIntro() {
+    const steps = intro.querySelectorAll('.step');
+    if (introStep < steps.length - 1) {
+      steps[introStep].classList.remove('on');
+      introStep++;
+      steps[introStep].classList.add('on');
+    } else {
+      intro.classList.add('gone');
+      try { sessionStorage.setItem('plone_intro', '1'); } catch (e) {}
+      setTimeout(() => intro.remove(), 1700);
+      setTimeout(ignite, 200);
+      setTimeout(() => line.focus({ preventScroll: true }), 1700);
+    }
+  }
+  if (seen) {
+    intro.remove();
+    setTimeout(() => line.focus({ preventScroll: true }), 400);
+  } else {
+    intro.addEventListener('click', advanceIntro);
+    document.addEventListener('keydown', (e) => {
+      if (intro.isConnected && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+        e.preventDefault();
+        if (e.key === 'Escape') {
+          while (introStep < intro.querySelectorAll('.step').length - 1) introStep++;
+          advanceIntro();
+        } else advanceIntro();
+      }
+    });
+  }
+
   witnessLoop();
   setInterval(ambient, 2400);
   for (let i = 0; i < 3; i++) setTimeout(ambient, i * 800);

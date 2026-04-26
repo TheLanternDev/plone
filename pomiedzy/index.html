@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pomiędzy — list do siebie w przyszłość</title>
+<meta name="description" content="Napisz, zaplombuj. Plik wraca do ciebie w wybranym dniu. Nic nie wychodzi z tej strony." />
+<meta name="theme-color" content="#0b0d12" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Pomiędzy" />
+<meta property="og:description" content="List do siebie. Otworzy się dopiero w wybranym dniu." />
+<meta property="og:url" content="https://thelanterndev.github.io/plone/pomiedzy/" />
+<meta property="og:image" content="https://thelanterndev.github.io/plone/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="pl_PL" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Pomiędzy" />
+<meta name="twitter:description" content="List do siebie. Otworzy się dopiero w wybranym dniu." />
+<meta name="twitter:image" content="https://thelanterndev.github.io/plone/og.png" />
+<link rel="canonical" href="https://thelanterndev.github.io/plone/pomiedzy/" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --ink: #e9e3d3;
+    --ink-soft: rgba(233,227,211,0.55);
+    --ink-faint: rgba(233,227,211,0.18);
+    --gold: #d9b779;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 300;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1.2rem 5rem;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(217,183,121,0.05) 0%, rgba(0,0,0,0) 55%),
+      var(--bg);
+  }
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+    text-align: center;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 0 0 2rem;
+    letter-spacing: 0.02em;
+  }
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--ink-faint);
+    border-radius: 10px;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    padding: 1.2rem 1.4rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.4s ease;
+  }
+  textarea:focus { border-color: rgba(217,183,121,0.45); }
+  .row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.2rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  label {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  input[type="date"] {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--ink-faint);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 0.55rem 0.8rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color-scheme: dark;
+  }
+  button {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.7rem 1.6rem;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+    margin-top: 1.4rem;
+  }
+  button:hover { background: var(--gold); color: var(--bg); }
+  .note {
+    margin-top: 2.5rem;
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .sealed { text-align: center; }
+  .sealed .glow {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--gold);
+    margin: 0 auto 2.4rem;
+    box-shadow: 0 0 40px 8px rgba(217,183,121,0.3);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  .letter {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.2rem, 2.8vw, 1.6rem);
+    line-height: 1.7;
+    color: var(--ink);
+    text-align: left;
+    white-space: pre-wrap;
+    text-wrap: pretty;
+    max-width: 580px;
+    margin: 0 auto;
+  }
+  .mark {
+    margin-top: 3rem;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+  }
+  .when {
+    color: var(--gold);
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    margin-top: 0.6rem;
+  }
+  .room {
+    position: fixed;
+    bottom: 1.3rem;
+    font-family: system-ui, sans-serif;
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(233, 227, 211, 0.18);
+    text-decoration: none;
+    transition: color 0.8s ease;
+    z-index: 5;
+  }
+  .room:hover { color: rgba(217, 183, 121, 0.6); }
+  .room.left  { left: 1.4rem; }
+  .room.right { right: 1.4rem; }
+
+  /* welcome line — zwięzły kontekst */
+  .welcome {
+    color: var(--ink-faint);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    margin: 0 0 1.4rem;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+
+  /* === pieczęć woskowa === */
+  #seal-fx {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #seal-fx.on { display: flex; }
+  #seal-fx::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(217,183,121,0.22) 0%, rgba(0,0,0,0) 45%);
+    animation: seal-flash 1.6s ease-out forwards;
+  }
+  @keyframes seal-flash {
+    0%   { opacity: 0; }
+    20%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .stamp {
+    position: relative;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #f3d28a 0%, #d9b779 35%, #8a6e3a 100%);
+    box-shadow:
+      0 0 80px 20px rgba(217,183,121,0.35),
+      inset 0 -10px 30px rgba(0,0,0,0.35),
+      inset 0 8px 18px rgba(255,230,180,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #2a1f0e;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 3.2rem;
+    transform: scale(0.2);
+    opacity: 0;
+    animation: stamp-fall 2.4s cubic-bezier(.2, .9, .25, 1) forwards;
+  }
+  .stamp::after {
+    content: '';
+    position: absolute; inset: 6px;
+    border-radius: 50%;
+    border: 1px dashed rgba(42, 31, 14, 0.45);
+  }
+  @keyframes stamp-fall {
+    0%   { transform: scale(0.2) rotate(-10deg); opacity: 0; filter: blur(6px); }
+    35%  { transform: scale(1.25) rotate(2deg);  opacity: 1; filter: blur(0); }
+    50%  { transform: scale(1.05) rotate(0deg); }
+    80%  { transform: scale(1)    rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.4)  rotate(0deg); opacity: 0; filter: blur(8px); }
+  }
+  .stamp-glyph { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<div id="seal-fx" aria-hidden="true"><div class="stamp"><span class="stamp-glyph">P</span></div></div>
+<a class="room left"  href="../"           aria-label="Płonę — kiedy coś gore">płonę</a>
+<a class="room right" href="../latarnia/"   aria-label="Latarnia — gdy nic dziś nie musisz">latarnia</a>
+
+<script>
+const SEALED_PAYLOAD = null;
+const PRISTINE_SOURCE = document.documentElement.outerHTML;
+
+function xorCipher(text, key) {
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    out += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return out;
+}
+function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
+function fromB64(s) { return decodeURIComponent(escape(atob(s))); }
+
+function fmtDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function renderCreate() {
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <h1>Pomiędzy</h1>
+    <p class="sub">List do siebie. Otworzy się dopiero w wybranym dniu.</p>
+    <p class="welcome">Napisz, co chcesz powiedzieć sobie później. Nic nie wychodzi z tej strony — plik powstaje u ciebie i wraca do ciebie wtedy, kiedy ustalisz.</p>
+    <textarea id="letter" placeholder="Drogi przyszły ja…"></textarea>
+    <div class="row">
+      <label for="when">Otworzyć dnia</label>
+      <input type="date" id="when" />
+    </div>
+    <button id="seal">Zaplombuj</button>
+    <p class="note">
+      Nic nie wychodzi z tej strony. Plik powstaje u ciebie, zostaje u ciebie.<br>
+      Zapisz go tam, gdzie wróci do ciebie wtedy, kiedy trzeba.
+    </p>
+  `;
+  const today = new Date();
+  const inOneYear = new Date(today);
+  inOneYear.setFullYear(today.getFullYear() + 1);
+  document.getElementById('when').value = inOneYear.toISOString().slice(0, 10);
+  document.getElementById('when').min = today.toISOString().slice(0, 10);
+  document.getElementById('seal').addEventListener('click', seal);
+}
+
+async function seal() {
+  const text = document.getElementById('letter').value.trim();
+  const when = document.getElementById('when').value;
+  if (!text) { document.getElementById('letter').focus(); return; }
+  if (!when) return;
+
+  const fx = document.getElementById('seal-fx');
+  fx.classList.add('on');
+  await new Promise(r => setTimeout(r, 1100));
+
+  const cipher = toB64(xorCipher(text, when));
+  const payload = { c: cipher, d: when, sealed_at: new Date().toISOString().slice(0, 10) };
+  const html = await currentSourceWithPayload(payload);
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pomiedzy-${when}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  await new Promise(r => setTimeout(r, 1300));
+  fx.classList.remove('on');
+
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <h1>Zaplombowane</h1>
+    <p class="sub">Plik zapisał się u ciebie. Zachowaj go bezpiecznie.</p>
+    <div class="when">otworzy się ${fmtDate(when)}</div>
+    <p class="note">
+      Możesz wysłać go sobie mailem. Możesz schować na dysku.<br>
+      On poczeka. Tyle, ile trzeba.
+    </p>
+  `;
+}
+
+async function currentSourceWithPayload(payload) {
+  const json = JSON.stringify(payload).replace(/</g, '\\u003c');
+  return '<!doctype html>\n' + PRISTINE_SOURCE.replace(
+    'const SEALED_PAYLOAD = null;',
+    'const SEALED_PAYLOAD = ' + json + ';'
+  );
+}
+
+function renderSealed(payload) {
+  const root = document.getElementById('root');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const open = new Date(payload.d + 'T00:00:00');
+
+  if (now < open) {
+    root.innerHTML = `
+      <div class="sealed">
+        <div class="glow"></div>
+        <h1>Jeszcze nie</h1>
+        <div class="when">wróć ${fmtDate(payload.d)}</div>
+        <div class="mark">pomiędzy</div>
+      </div>
+    `;
+    return;
+  }
+
+  let plain = '';
+  try { plain = xorCipher(fromB64(payload.c), payload.d); }
+  catch (e) { plain = '(nie udało się odczytać)'; }
+
+  root.innerHTML = `
+    <div class="sealed">
+      <div class="glow"></div>
+      <div class="letter" id="letter"></div>
+      <div class="mark">otworzone ${new Date().toLocaleDateString('pl-PL')}</div>
+    </div>
+  `;
+  const el = document.getElementById('letter');
+  let i = 0;
+  const speed = 28;
+  const tick = () => {
+    el.textContent = plain.slice(0, ++i);
+    if (i < plain.length) setTimeout(tick, speed);
+  };
+  setTimeout(tick, 1200);
+}
+
+if (SEALED_PAYLOAD) renderSealed(SEALED_PAYLOAD);
+else renderCreate();
+</script>
+</body>
+</html>
