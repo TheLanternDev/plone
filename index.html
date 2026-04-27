@@ -105,7 +105,7 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 #mode-pomiedzy input[type="date"]{background:rgba(255,255,255,.02);border:1px solid var(--ink-faint);color:var(--ink);border-radius:8px;padding:.55rem .8rem;font-family:inherit;font-size:.95rem;color-scheme:dark}
 #mode-pomiedzy button.primary{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:.7rem 1.6rem;border-radius:999px;font-family:inherit;font-size:.9rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:background .3s ease,color .3s ease;margin-top:1.4rem}
 #mode-pomiedzy button.primary:hover{background:var(--gold);color:var(--bg-m)}
-#mode-pomiedzy .note{margin-top:2.5rem;margin-left:auto;margin-right:auto;max-width:36rem;color:var(--ink-faint);font-size:.82rem;letter-spacing:.05em;line-height:1.65;font-style:italic;font-family:'Cormorant Garamond',serif}
+#mode-pomiedzy .note{margin-top:2.8rem;margin-left:auto;margin-right:auto;max-width:28rem;color:var(--ink-faint);font-size:.8rem;letter-spacing:.07em;line-height:1.5;font-style:italic;font-family:'Cormorant Garamond',serif;text-align:center;border-top:1px solid rgba(217,183,121,.08);padding-top:1.2rem}
 #mode-pomiedzy .sealed{text-align:center}
 #mode-pomiedzy .sealed .glow{width:14px;height:14px;border-radius:50%;background:var(--gold);margin:0 auto 2.4rem;box-shadow:0 0 40px 8px rgba(217,183,121,.3);animation:pulse 4s ease-in-out infinite;position:relative;background-image:none;display:block}
 @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
@@ -323,8 +323,8 @@ LANG.pl = {
     ]
   },
   pomiedzy: {
-    create: { h1:'Pomiędzy', sub:'List do siebie. Otworzy się dopiero w wybranym dniu.', welcome:'Napisz, co chcesz powiedzieć sobie później. Nic nie wychodzi z tej strony — plik powstaje u ciebie i wraca do ciebie wtedy, kiedy ustalisz.', placeholder:'Drogi przyszły ja…', whenLabel:'Otworzyć dnia', button:'Zaplombuj', noteLine1:'Nic nie wychodzi z tej strony. Pobierzesz plik .html: treść w środku domyka się w wybranym dniu (nazwa zaczyna się kropką, żeby w Pobraniach mniej rzucał się w oczy).', noteLine2:'Pełnej blokady jak od banku płatności nie obiecuje nikt bez serwera — tu chodzi o skuteczną, ludzką pauzę, nie wojnę szyfrową.' },
-    sealed:  { h1:'Zaplombowane', sub:'To po twojej stronie, do tej daty tylko odliczanie — bez treści w jasnym tekście w pliku.', whenPrefix:'otworzy się ', noteLine1:'Możesz wysłać go sobie mailem. Możesz schować na dysku.', noteLine2:'On poczeka. Tyle, ile trzeba.' },
+    create: { h1:'Pomiędzy', sub:'List do siebie. Otworzy się dopiero w wybranym dniu.', welcome:'Napisz, co chcesz powiedzieć sobie później. Nic nie wychodzi z tej strony — plik powstaje u ciebie i wraca do ciebie wtedy, kiedy ustalisz.', placeholder:'Drogi przyszły ja…', whenLabel:'Otworzyć dnia', button:'Zaplombuj', noteLine1:'Żadnych danych na zewnątrz. Pobrany plik jest zaszyfrowany aż do wybranej daty.', noteLine2:'' },
+    sealed:  { h1:'Zaplombowane', sub:'To po twojej stronie, do tej daty tylko odliczanie — bez treści w jasnym tekście w pliku.', whenPrefix:'otworzy się ', noteLine1:'On poczeka. Tyle, ile trzeba.', noteLine2:'' },
     notYet:  { h1:'Jeszcze nie', whenPrefix:'wróć ' },
     opened:  { prefix:'otworzone ' },
     err:     { read:'(nie udało się odczytać)' }
@@ -847,15 +847,15 @@ LANG.en = {
       placeholder: 'Dear future me…',
       whenLabel: 'Open on',
       button: 'Seal it',
-      noteLine1: 'Nothing leaves this page. You download an .html file: its contents stay locked until the date you picked (the name starts with a dot so it sits low-key in Downloads).',
-      noteLine2: 'Nobody can promise bank-level lockdown without a server — this is about a real, human pause, not a crypto war.'
+      noteLine1: 'Nothing stored anywhere. The downloaded file stays encrypted until the date you chose.',
+      noteLine2: ''
     },
     sealed: {
       h1: 'Sealed',
       sub: "It's on your side now. Until that date, just a countdown — no plain text inside the file.",
       whenPrefix: 'opens on ',
-      noteLine1: 'You can email it to yourself. You can stash it on a drive.',
-      noteLine2: "It'll wait. As long as it takes."
+      noteLine1: "It'll wait. As long as it takes.",
+      noteLine2: ''
     },
     notYet: {
       h1: 'Not yet',
@@ -1362,15 +1362,15 @@ LANG.es = {
       placeholder: 'Querido yo del futuro…',
       whenLabel: 'Abrir el día',
       button: 'Sellar',
-      noteLine1: 'Nada sale de esta página. Descargas un archivo .html: el contenido queda cerrado hasta la fecha que elijas (el nombre empieza con un punto para no llamar la atención en Descargas).',
-      noteLine2: 'Nadie promete un blindaje bancario sin servidor — aquí va de una pausa humana de verdad, no una guerra cripto.'
+      noteLine1: 'Nada se guarda en ningún lado. El archivo descargado está cifrado hasta la fecha que elegiste.',
+      noteLine2: ''
     },
     sealed: {
       h1: 'Sellado',
       sub: 'Ahora está de tu lado. Hasta esa fecha, solo cuenta atrás — nada en texto claro dentro del archivo.',
       whenPrefix: 'se abre el ',
-      noteLine1: 'Puedes mandártelo por mail. Puedes esconderlo en un disco.',
-      noteLine2: 'Esperará. Lo que haga falta.'
+      noteLine1: 'Esperará. Lo que haga falta.',
+      noteLine2: ''
     },
     notYet: {
       h1: 'Aún no',
@@ -1877,15 +1877,15 @@ LANG.nl = {
       placeholder: 'Lieve toekomstige ik…',
       whenLabel: 'Openen op',
       button: 'Verzegel',
-      noteLine1: 'Niets verlaat deze pagina. Je downloadt een .html-bestand: de inhoud blijft gesloten tot de dag die jij hebt gekozen (de naam begint met een punt zodat het in Downloads niet meteen opvalt).',
-      noteLine2: 'Niemand belooft bank-niveau-vergrendeling zonder server — dit gaat om een echte, menselijke pauze, geen crypto-oorlog.'
+      noteLine1: 'Niets wordt ergens opgeslagen. Het gedownloade bestand is versleuteld tot de datum die jij koos.',
+      noteLine2: ''
     },
     sealed: {
       h1: 'Verzegeld',
       sub: 'Het ligt nu aan jouw kant. Tot die datum is het alleen aftellen — geen leesbare tekst in het bestand.',
       whenPrefix: 'gaat open op ',
-      noteLine1: 'Je kunt het naar jezelf mailen. Je kunt het wegzetten op een schijf.',
-      noteLine2: 'Het wacht. Zo lang als nodig.'
+      noteLine1: 'Het wacht. Zo lang als nodig.',
+      noteLine2: ''
     },
     notYet: {
       h1: 'Nog niet',
@@ -2392,15 +2392,15 @@ LANG.uk = {
       placeholder: 'Любий я з майбутнього…',
       whenLabel: 'Відкрити',
       button: 'Запечатати',
-      noteLine1: 'Нічого не виходить з цієї сторінки. Завантажуєш файл .html: вміст залишається закритим до обраної дати (імʼя починається з крапки, щоб у Завантаженнях не впадало в око).',
-      noteLine2: 'Ніхто без сервера не обіцяє блокування рівня банку — тут ідеться про справжню, людську паузу, а не криптовійну.'
+      noteLine1: 'Жодних даних назовні. Завантажений файл зашифрований аж до обраної дати.',
+      noteLine2: ''
     },
     sealed: {
       h1: 'Запечатано',
       sub: 'Тепер це на твоєму боці. До цієї дати — лише зворотний відлік, без відкритого тексту у файлі.',
       whenPrefix: 'відкриється ',
-      noteLine1: 'Можеш надіслати його собі поштою. Можеш сховати на диску.',
-      noteLine2: 'Він почекає. Стільки, скільки треба.'
+      noteLine1: 'Він почекає. Стільки, скільки треба.',
+      noteLine2: ''
     },
     notYet: {
       h1: 'Ще ні',
@@ -3025,7 +3025,7 @@ LANG.uk = {
         '<textarea id="letter" aria-label=""></textarea>' +
         '<div class="row"><label for="when"></label><input type="date" id="when"></div>' +
         '<button id="seal" class="primary"></button>' +
-        '<p class="note"><span class="n1"></span><br><span class="n2"></span></p>';
+        '<p class="note"><span class="n1"></span></p>';
       root.querySelector('h1').textContent = c.h1;
       root.querySelector('.sub').textContent = c.sub;
       root.querySelector('.welcome').textContent = c.welcome;
@@ -3042,7 +3042,6 @@ LANG.uk = {
       const btn = root.querySelector('#seal');
       btn.textContent = c.button;
       root.querySelector('.note .n1').textContent = c.noteLine1;
-      root.querySelector('.note .n2').textContent = c.noteLine2;
       btn.addEventListener('click', seal);
     }
     async function seal(){
@@ -3073,12 +3072,11 @@ LANG.uk = {
         '<h1></h1>' +
         '<p class="sub"></p>' +
         '<div class="when"></div>' +
-        '<p class="note"><span class="n1"></span><br><span class="n2"></span></p>';
+        '<p class="note"><span class="n1"></span></p>';
       root.querySelector('h1').textContent = s.h1;
       root.querySelector('.sub').textContent = s.sub;
       root.querySelector('.when').textContent = s.whenPrefix + fmtDate(when);
       root.querySelector('.note .n1').textContent = s.noteLine1;
-      root.querySelector('.note .n2').textContent = s.noteLine2;
     }
     function currentSourceWithPayload(payload, lang){
       const json = JSON.stringify(payload).replace(/</g, '\\u003c');
