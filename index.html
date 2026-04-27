@@ -25,7 +25,7 @@
 <style>
 :root{
   --bg-l:#0b0d12; --bg-p:#050608; --bg-m:#0b0d12;
-  --ink:#e9e3d3; --ink-soft:rgba(233,227,211,.55); --ink-faint:rgba(233,227,211,.18);
+  --ink:#e9e3d3; --ink-soft:rgba(233,227,211,.62); --ink-faint:rgba(233,227,211,.28);
   --gold:#d9b779;
   --you-bright:rgba(255,210,140,.95); --you-mid:rgba(255,150,70,.85); --you-deep:rgba(220,70,20,.7);
   --me-bright:rgba(255,170,110,.95); --me-mid:rgba(230,90,60,.85); --me-deep:rgba(180,40,20,.65);
@@ -35,7 +35,7 @@
 html,body{margin:0;height:100%;background:var(--bg-l);color:var(--ink);font-family:'Cormorant Garamond','Garamond',serif;font-style:italic;font-weight:300;cursor:default;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body{transition:background 1.4s ease;overflow:hidden}
 body[data-mode="plone"]{background:var(--bg-p)}
-body[data-mode="pomiedzy"]{background:var(--bg-m);font-family:'Inter',system-ui,sans-serif;font-style:normal;overflow:auto}
+body[data-mode="pomiedzy"]{background:var(--bg-m);font-family:'Inter',system-ui,sans-serif;font-style:normal;overflow:auto;--ink-soft:rgba(233,227,211,.68);--ink-faint:rgba(233,227,211,.36)}
 body[data-mode="pomiedzy"]::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(217,183,121,.05) 0%,rgba(0,0,0,0) 55%);pointer-events:none;z-index:0}
 body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 90%,rgba(255,130,50,.05) 0%,rgba(0,0,0,0) 50%),radial-gradient(ellipse at 70% 10%,rgba(255,100,40,.04) 0%,rgba(0,0,0,0) 55%);pointer-events:none;z-index:0}
 .mode{position:fixed;inset:0;display:none;opacity:0;transition:opacity 1.2s ease;z-index:1}
@@ -55,7 +55,7 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 @keyframes beam-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 .core{position:fixed;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:rgba(255,220,170,.35);box-shadow:0 0 30px 6px rgba(255,200,140,.18);transform:translate(-50%,-50%);pointer-events:none;animation:core-breath 5.5s ease-in-out infinite;z-index:0}
 @keyframes core-breath{0%,100%{opacity:.25;transform:translate(-50%,-50%) scale(.85)}50%{opacity:.7;transform:translate(-50%,-50%) scale(1.15)}}
-#welcome{position:fixed;top:12vh;left:50%;transform:translateX(-50%);text-align:center;color:rgba(233,227,211,.42);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(.95rem,1.8vw,1.1rem);letter-spacing:.04em;opacity:0;transition:opacity 2.6s ease;pointer-events:none;max-width:80vw;z-index:3}
+#welcome{position:fixed;top:12vh;left:50%;transform:translateX(-50%);text-align:center;color:rgba(233,227,211,.52);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(.95rem,1.8vw,1.1rem);letter-spacing:.04em;opacity:0;transition:opacity 2.6s ease;pointer-events:none;max-width:80vw;z-index:3}
 #welcome.on{opacity:1}
 #intro{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(100,130,180,.07) 0%,rgba(11,13,18,.98) 55%,#0b0d12 100%);z-index:100;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:1;transition:opacity 1.6s ease}
 #intro.gone{opacity:0;pointer-events:none}
@@ -66,16 +66,16 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 @keyframes step-in{from{opacity:0;transform:translateY(8px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 #intro h2{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(2.1rem,5.4vw,3rem);margin:0 0 1.2rem;letter-spacing:.02em;color:rgba(255,220,200,.92)}
 #intro p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.1rem,2.2vw,1.35rem);line-height:1.6;margin:0 0 .5rem;color:rgba(233,227,211,.78)}
-#intro p.dim{color:rgba(233,227,211,.42);font-size:clamp(.9rem,1.6vw,1.05rem)}
+#intro p.dim{color:rgba(233,227,211,.52);font-size:clamp(.9rem,1.6vw,1.05rem)}
 #intro .rooms{margin:1.1rem 0;display:grid;gap:.45rem;text-align:center}
 #intro .rooms b{color:rgba(220,200,170,.95);font-weight:400;margin-right:.35em}
-#intro .hint{margin-top:1.8rem;font-family:system-ui,sans-serif;font-style:normal;font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:rgba(233,227,211,.26)}
+#intro .hint{margin-top:1.8rem;font-family:system-ui,sans-serif;font-style:normal;font-size:.72rem;letter-spacing:.4em;text-transform:uppercase;color:rgba(233,227,211,.38)}
 
 /* ======= PŁONĘ ======= */
 #mode-plone{display:none}
 #mode-plone.on{display:block}
 #witness{position:fixed;top:6vh;left:50%;transform:translateX(-50%);pointer-events:none;text-align:center;z-index:5}
-#witness span{display:inline-block;font-size:clamp(1.2rem,2.4vw,1.6rem);color:rgba(233,227,211,.5);opacity:0;transition:opacity 3.5s ease;letter-spacing:.04em;text-shadow:0 0 18px rgba(255,200,140,.08)}
+#witness span{display:inline-block;font-size:clamp(1.2rem,2.4vw,1.6rem);color:rgba(233,227,211,.6);opacity:0;transition:opacity 3.5s ease;letter-spacing:.04em;text-shadow:0 0 18px rgba(255,200,140,.08)}
 #stage-p{position:fixed;inset:0;pointer-events:none;z-index:2}
 .ember{position:absolute;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(.95rem,1.6vw,1.2rem);white-space:pre-wrap;max-width:70vw;text-align:center;pointer-events:none;opacity:0;will-change:transform,opacity,filter}
 .ember.you{color:var(--you-bright);text-shadow:0 0 8px rgba(255,180,90,.6),0 0 18px rgba(255,120,40,.4)}
@@ -89,12 +89,12 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 #compose{position:fixed;bottom:8vh;left:50%;transform:translateX(-50%);width:min(82vw,580px);z-index:10;text-align:center}
 #line{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(233,227,211,.12);outline:none;color:var(--ink);font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(1.1rem,2.2vw,1.4rem);text-align:center;padding:.7rem .4rem;caret-color:rgba(255,180,90,.7);transition:border-color 1.2s ease}
 #line:focus{border-bottom-color:rgba(255,180,90,.4)}
-#line::placeholder{color:rgba(233,227,211,.18);font-style:italic}
+#line::placeholder{color:rgba(233,227,211,.3);font-style:italic}
 
 /* ======= POMIĘDZY ======= */
 #mode-pomiedzy{display:none}
 #mode-pomiedzy.on{display:block}
-#mode-pomiedzy .wrap{width:100%;max-width:640px;text-align:center;margin:0 auto;padding:4rem 1.2rem 5rem;font-family:'Inter',system-ui,sans-serif;font-style:normal;position:relative;z-index:2}
+#mode-pomiedzy .wrap{width:100%;max-width:640px;text-align:center;margin:0 auto;padding:4rem 1.2rem clamp(8.5rem,18vh,11rem);font-family:'Inter',system-ui,sans-serif;font-style:normal;position:relative;z-index:2}
 #mode-pomiedzy h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(2rem,5vw,2.6rem);margin:0 0 .4rem;letter-spacing:.02em;color:var(--ink)}
 #mode-pomiedzy .sub{color:var(--ink-soft);font-size:.95rem;margin:0 0 2rem;letter-spacing:.02em}
 #mode-pomiedzy .welcome{color:var(--ink-faint);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;margin:0 0 1.4rem;letter-spacing:.02em;line-height:1.6}
@@ -105,12 +105,12 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 #mode-pomiedzy input[type="date"]{background:rgba(255,255,255,.02);border:1px solid var(--ink-faint);color:var(--ink);border-radius:8px;padding:.55rem .8rem;font-family:inherit;font-size:.95rem;color-scheme:dark}
 #mode-pomiedzy button.primary{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:.7rem 1.6rem;border-radius:999px;font-family:inherit;font-size:.9rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:background .3s ease,color .3s ease;margin-top:1.4rem}
 #mode-pomiedzy button.primary:hover{background:var(--gold);color:var(--bg-m)}
-#mode-pomiedzy .note{margin-top:2.5rem;color:var(--ink-faint);font-size:.78rem;letter-spacing:.06em;line-height:1.7;font-style:italic;font-family:'Cormorant Garamond',serif}
+#mode-pomiedzy .note{margin-top:2.5rem;margin-left:auto;margin-right:auto;max-width:36rem;color:var(--ink-faint);font-size:.82rem;letter-spacing:.05em;line-height:1.65;font-style:italic;font-family:'Cormorant Garamond',serif}
 #mode-pomiedzy .sealed{text-align:center}
 #mode-pomiedzy .sealed .glow{width:14px;height:14px;border-radius:50%;background:var(--gold);margin:0 auto 2.4rem;box-shadow:0 0 40px 8px rgba(217,183,121,.3);animation:pulse 4s ease-in-out infinite;position:relative;background-image:none;display:block}
 @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
 #mode-pomiedzy .letter{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(1.2rem,2.8vw,1.6rem);line-height:1.7;color:var(--ink);text-align:left;white-space:pre-wrap;text-wrap:pretty;max-width:580px;margin:0 auto}
-#mode-pomiedzy .letter-mark{margin-top:3rem;color:var(--ink-faint);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase}
+#mode-pomiedzy .letter-mark{margin-top:3rem;color:var(--ink-soft);font-size:.74rem;letter-spacing:.38em;text-transform:uppercase}
 #mode-pomiedzy .when{color:var(--gold);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-top:.6rem}
 #seal-fx{position:fixed;inset:0;pointer-events:none;z-index:50;display:none;align-items:center;justify-content:center}
 #seal-fx.on{display:flex}
@@ -122,14 +122,14 @@ body[data-mode="plone"]::before{content:'';position:fixed;inset:0;background:rad
 .stamp-glyph{position:relative;z-index:1}
 
 /* ======= shared chrome ======= */
-.mark{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);font-size:.7rem;letter-spacing:.45em;color:rgba(233,227,211,.16);text-transform:uppercase;font-style:normal;font-family:system-ui,sans-serif;z-index:4;pointer-events:none}
-.room{position:fixed;bottom:1.3rem;font-family:system-ui,sans-serif;font-style:normal;font-size:.62rem;letter-spacing:.45em;text-transform:uppercase;color:rgba(233,227,211,.18);text-decoration:none;transition:color .8s ease;z-index:6}
+.mark{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);font-size:.74rem;letter-spacing:.42em;color:rgba(233,227,211,.3);text-transform:uppercase;font-style:normal;font-family:system-ui,sans-serif;z-index:4;pointer-events:none}
+.room{position:fixed;bottom:1.3rem;font-family:system-ui,sans-serif;font-style:normal;font-size:.66rem;letter-spacing:.42em;text-transform:uppercase;color:rgba(233,227,211,.32);text-decoration:none;transition:color .8s ease;z-index:6}
 .room:hover,.room:focus-visible{color:rgba(217,183,121,.6);outline:none}
 .room.left{left:1.4rem}
 .room.right{right:1.4rem}
 body[data-mode="plone"] .room:hover{color:rgba(255,200,130,.55)}
 #langbar{position:fixed;top:1.1rem;right:1.2rem;z-index:200;display:flex;gap:.05rem;font-family:system-ui,sans-serif;font-style:normal;font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;user-select:none}
-#langbar button{background:transparent;border:none;color:rgba(233,227,211,.22);cursor:pointer;padding:.28rem .45rem;font:inherit;letter-spacing:inherit;transition:color .6s ease}
+#langbar button{background:transparent;border:none;color:rgba(233,227,211,.36);cursor:pointer;padding:.28rem .45rem;font:inherit;letter-spacing:inherit;transition:color .6s ease}
 #langbar button:hover,#langbar button:focus-visible{color:rgba(217,183,121,.7);outline:none}
 #langbar button.on{color:rgba(217,183,121,.95)}
 #langbar .sep{color:rgba(233,227,211,.10);align-self:center;pointer-events:none}
@@ -360,13 +360,13 @@ LANG.en = {
     latarnia: {
       mark: 'lighthouse',
       introAria: 'Intro',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę — burn it with words',
+      roomLeftLabel: 'burn',
+      roomLeftAria: 'Burn — write it with words',
       roomRightLabel: 'between',
       roomRightAria: 'Between — letter to your future self'
     },
     plone: {
-      mark: 'płonę',
+      mark: 'burn',
       placeholder: "What's burning today?",
       ariaInput: 'Write what you want to burn',
       roomLeftLabel: 'lighthouse',
@@ -376,8 +376,8 @@ LANG.en = {
     },
     pomiedzy: {
       mark: 'between',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę',
+      roomLeftLabel: 'burn',
+      roomLeftAria: 'Burn — write it with words',
       roomRightLabel: 'lighthouse',
       roomRightAria: 'Lighthouse'
     }
@@ -399,7 +399,7 @@ LANG.en = {
           text: ' — here. Pause, one sentence.'
         },
         r2: {
-          name: 'Płonę',
+          name: 'Burn',
           text: " — when it's too hot inside, a word in reply."
         },
         r3: {
@@ -899,13 +899,13 @@ LANG.es = {
     latarnia: {
       mark: 'faro',
       introAria: 'Intro',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę — arder con palabras',
+      roomLeftLabel: 'arder',
+      roomLeftAria: 'Arder — soltarlo con palabras',
       roomRightLabel: 'entremedio',
       roomRightAria: 'Entremedio — carta a tu yo del futuro'
     },
     plone: {
-      mark: 'płonę',
+      mark: 'arder',
       placeholder: '¿Qué arde hoy?',
       ariaInput: 'Escribe lo que quieres que arda',
       roomLeftLabel: 'faro',
@@ -915,8 +915,8 @@ LANG.es = {
     },
     pomiedzy: {
       mark: 'entremedio',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę',
+      roomLeftLabel: 'arder',
+      roomLeftAria: 'Arder — soltarlo con palabras',
       roomRightLabel: 'faro',
       roomRightAria: 'Faro'
     }
@@ -938,7 +938,7 @@ LANG.es = {
           text: ' — aquí. Pausa, una frase.'
         },
         r2: {
-          name: 'Płonę',
+          name: 'Arder',
           text: ' — cuando dentro hace demasiado, una palabra en respuesta.'
         },
         r3: {
@@ -1414,13 +1414,13 @@ LANG.nl = {
     latarnia: {
       mark: 'vuurtoren',
       introAria: 'Intro',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę — in woorden verbranden',
+      roomLeftLabel: 'brand',
+      roomLeftAria: 'Brand — in woorden verbranden',
       roomRightLabel: 'tussen',
       roomRightAria: 'Tussen — brief aan je toekomstige zelf'
     },
     plone: {
-      mark: 'płonę',
+      mark: 'brand',
       placeholder: 'Wat brandt vandaag?',
       ariaInput: 'Schrijf wat je wil verbranden',
       roomLeftLabel: 'vuurtoren',
@@ -1430,8 +1430,8 @@ LANG.nl = {
     },
     pomiedzy: {
       mark: 'tussen',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę',
+      roomLeftLabel: 'brand',
+      roomLeftAria: 'Brand — in woorden verbranden',
       roomRightLabel: 'vuurtoren',
       roomRightAria: 'Vuurtoren'
     }
@@ -1453,7 +1453,7 @@ LANG.nl = {
           text: ' — hier. Pauze, één zin.'
         },
         r2: {
-          name: 'Płonę',
+          name: 'Brand',
           text: ' — als het binnen te heet wordt, een woord als antwoord.'
         },
         r3: {
@@ -1929,13 +1929,13 @@ LANG.uk = {
     latarnia: {
       mark: 'маяк',
       introAria: 'Вступ',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę — спалити словом',
+      roomLeftLabel: 'вогонь',
+      roomLeftAria: 'Вогонь — спалити словом',
       roomRightLabel: 'між',
       roomRightAria: 'Між — лист собі в майбутнє'
     },
     plone: {
-      mark: 'płonę',
+      mark: 'вогонь',
       placeholder: 'Що сьогодні горить?',
       ariaInput: 'Напиши те, що хочеш спалити',
       roomLeftLabel: 'маяк',
@@ -1945,8 +1945,8 @@ LANG.uk = {
     },
     pomiedzy: {
       mark: 'між',
-      roomLeftLabel: 'płonę',
-      roomLeftAria: 'Płonę',
+      roomLeftLabel: 'вогонь',
+      roomLeftAria: 'Вогонь — спалити словом',
       roomRightLabel: 'маяк',
       roomRightAria: 'Маяк'
     }
@@ -1968,7 +1968,7 @@ LANG.uk = {
           text: ' — тут. Пауза, одне речення.'
         },
         r2: {
-          name: 'Płonę',
+          name: 'Вогонь',
           text: ' — коли всередині надто гаряче, слово у відповідь.'
         },
         r3: {
